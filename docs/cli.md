@@ -204,6 +204,43 @@ Until version 1.0.0, a major change is recorded as minor in the changeset, becau
 
 Skills you want only for yourself belong in `~/.claude/skills/` or `~/.agents/skills/` on your own machine, not in a repository. Don't give them the `oak-` prefix: in Claude Code, a personal skill overrides a project skill with the same name.
 
+## Releasing
+
+This section is for the skills maintainer, who releases weekly, and whenever a fix can't wait. A release is one merge; the publish workflow, `.github/workflows/publish.yml`, does the rest.
+
+1. Changesets merged to `main` wait there. On every push to `main`, the publish workflow opens or updates a pull request titled `chore: version packages`. It sets the new version in `package.json`, adds the changesets' summaries to `CHANGELOG.md` and deletes the changesets. Its checks run like any other pull request's.
+2. Check the version and the changelog, then merge the pull request.
+3. The merge starts the publish workflow again. The version on `main` isn't on npm yet, so the workflow packs the release, runs the publish gates on it and, if they all pass, publishes that tarball to npm. It then tags the commit `v<version>` and creates a GitHub release, whose notes Dependabot shows in each consuming repository's update.
+
+The gates run immediately before publishing, because a published version can never be withdrawn:
+
+| Gate                           | Fails when                                                                                                                                                                                                                                                                  |
+| ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Secrets and personal data      | gitleaks finds a secret, an email address or a phone number anywhere in the git history                                                                                                                                                                                     |
+| Skill scan                     | Cisco skill-scanner finds a high-severity problem in any skill                                                                                                                                                                                                              |
+| `validate`, tests, build       | Any of them fails, as in CI                                                                                                                                                                                                                                                 |
+| publint                        | `package.json` describes the package wrongly, such as a `bin` file that isn't built                                                                                                                                                                                         |
+| Package contents               | The tarball holds anything outside `skills/`, `templates/` and `dist/` other than `package.json`, `README.md`, `CHANGELOG.md` and `LICENSE`; misses a file the tool needs; has an install script or runtime dependencies; or contains the `todo-engineers-team` placeholder |
+| Placeholder team in CODEOWNERS | `.github/CODEOWNERS` still names `todo-engineers-team`                                                                                                                                                                                                                      |
+
+Run the package gates locally with `pnpm publish:gate`. It builds, packs the package as Changesets does, and checks the tarball.
+
+If a gate fails, nothing is published. Fix the problem on `main`: the next push tries again. If the fix itself needs a changeset, the version pull request comes back with the next version instead.
+
+The workflow publishes with [npm trusted publishing](https://docs.npmjs.com/trusted-publishers), so there's no npm token to store or leak. Each release carries a provenance attestation linking it to the workflow run that built it. To check one:
+
+```sh
+npm view @oaknational/oak-agent-skills@<version> dist.attestations
+```
+
+### When a bad version is published
+
+A published version can't be deleted or reused. Instead:
+
+1. Deprecate it, so installing it shows a warning: `npm deprecate @oaknational/oak-agent-skills@<version> "<why, and which version to use instead>"`. This needs an npm account with publish rights to the package.
+2. Fix the problem and release a new version.
+3. If a secret was published, rotate it straight away. Assume it has already been copied.
+
 ## Exit codes
 
 `status` and `check` use the same exit codes. When several apply, the highest wins: a configuration problem makes the other results unreliable, so fix it first. The [troubleshooting guide](troubleshooting.md#exit-codes) explains each one.
