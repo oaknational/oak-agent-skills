@@ -95,7 +95,7 @@ To bring a stale pull request up to date, comment `@dependabot recreate` on it. 
 
 If a release causes a problem in your repository, you can stay on the previous version while it's fixed centrally:
 
-1. Install the version you want at the repository root: `pnpm add -D --save-exact @oaknational/oak-agent-skills@<version>`. In a pnpm workspace that lists packages, add `-w`, as when [subscribing](cli.md#subscribing-a-repository).
+1. Install the version you want at the repository root: `pnpm add -D --save-exact @oaknational/oak-agent-skills@<version>`. In a pnpm workspace that lists packages, add `-w`, as [Subscribing a repository](cli.md#subscribing-a-repository) explains.
 2. Run `pnpm exec oak-skills sync`, then commit `package.json`, the lockfile and the skill folders together.
 3. On the next skills update pull request, comment `@dependabot ignore @oaknational/oak-agent-skills minor version`, using `major` or `patch` instead to match the release you're skipping. Dependabot closes the pull request and doesn't offer that version again.
 
