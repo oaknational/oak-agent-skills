@@ -10,7 +10,7 @@ While the first iteration is being built, agents follow `docs/plans/agent-build-
 
 ## Commands
 
-- Install: `pnpm install`
+- Install: `pnpm install`. Developing needs Node 22.18 or later, which runs the TypeScript in `scripts/` directly; the published tool supports Node 22 and later.
 - Build the tool into `dist/`: `pnpm build`
 - Type-check: `pnpm typecheck`
 - Test, with coverage: `pnpm test`. It builds `dist/` first, because end-to-end tests run the built command.
@@ -26,7 +26,8 @@ While the first iteration is being built, agents follow `docs/plans/agent-build-
 ## Layout
 
 - `src/`: the `oak-skills` tool. `src/cli.ts` is the entry point; `src/run.ts` dispatches commands.
-- `dist/`: the built tool. It's gitignored.
+- `dist/`: the built tool. It's gitignored, and `pnpm build` empties it first.
+- `scripts/`: repository-only scripts, run with `node scripts/<name>.ts`. They never ship.
 - `test/`: unit, integration and end-to-end tests. `test/helpers/temp-repo.ts` builds temporary git repositories from `test/fixtures/`.
 
 ## Rules

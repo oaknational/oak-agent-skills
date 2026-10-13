@@ -5,6 +5,7 @@ const root = fileURLToPath(new URL('..', import.meta.url));
 
 // End-to-end tests run the built command, so build it once before any test runs.
 export default function setup(): void {
+  execFileSync(process.execPath, ['scripts/clean.ts'], { cwd: root, stdio: 'inherit' });
   execFileSync(process.execPath, ['node_modules/typescript/bin/tsc', '-p', 'tsconfig.build.json'], {
     cwd: root,
     stdio: 'inherit',
