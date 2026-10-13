@@ -37,9 +37,11 @@
     "lint:md": "markdownlint-cli2",
     "spell": "cspell --no-progress --unique .",
     "links": "lychee --config lychee.toml .",
-    "secrets": "gitleaks git --config .gitleaks.toml --redact --no-banner ."
+    "secrets": "gitleaks git --config .gitleaks.toml --redact --no-banner .",
+    "changeset:status": "changeset status --since=main"
   },
   "devDependencies": {
+    "@changesets/cli": "3.0.3",
     "@commitlint/cli": "21.2.3",
     "@commitlint/config-conventional": "21.2.3",
     "@cspell/dict-en-gb": "5.0.35",
