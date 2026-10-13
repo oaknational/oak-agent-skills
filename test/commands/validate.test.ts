@@ -1,8 +1,10 @@
+import { spawnSync } from 'node:child_process';
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { run } from '../../src/run.ts';
 import { capture } from '../helpers/capture.ts';
+import { repoRoot } from '../helpers/paths.ts';
 import { createTempRepo, type TempRepo } from '../helpers/temp-repo.ts';
 import { removeTree, skillText, writeTree } from '../helpers/tree.ts';
 
@@ -47,8 +49,9 @@ describe('oak-skills validate', () => {
         'skills/central/oak-example/SKILL.md:10: uses the !`command` syntax, which Claude Code runs as a shell command before the skill reaches the model',
         "skills/profiles.json: doesn't list code-review in any profile, so no repository could receive it",
         "skills/central/oak-example/SKILL.md: has changed since the last commit, but metadata.updated is still 2026-10-13. Set it to today's date.",
+        'README.md: has an out-of-date skills table. Run pnpm readme:skills.',
         '',
-        'Found 4 problems in 2 skills.',
+        'Found 5 problems in 2 skills.',
       ].join('\n'),
     );
   });
@@ -69,6 +72,14 @@ describe('oak-skills validate', () => {
         '* @oaknational/skills-maintainers\n/skills/repos/owa/ @oaknational/owa-team @oaknational/skills-maintainers\n',
     });
     removeTree(join(repo.root, 'skills/repos/not-a-code'));
+    const regenerated = spawnSync(
+      process.execPath,
+      [join(repoRoot, 'scripts/readme-skills-table.ts')],
+      {
+        cwd: repo.root,
+      },
+    );
+    expect(regenerated.status).toBe(0);
     expect(await validateIn(repo.root)).toEqual({
       code: 0,
       out: 'Checked 2 skills: no problems.',

@@ -7,6 +7,7 @@ import { checkDescriptionBudget } from './description-budget.ts';
 import type { DevDependencies } from './dev-dependencies.ts';
 import type { Problem } from './problem.ts';
 import { checkProfiles, type Profiles } from './profiles.ts';
+import { checkReadmeTable } from './readme-table.ts';
 import type { SchemaName, SchemaValidator } from './schemas.ts';
 import { checkSkill, type CheckedSkill } from './skill-checks.ts';
 import { checkUpdatedDates } from './updated-dates.ts';
@@ -49,6 +50,7 @@ export function validateRepository(
       ...checkDescriptionBudget(skills),
       ...checkUpdatedDates(root, skills, deps, env),
       ...checkCodeowners(root, bundleCodes(root)),
+      ...checkReadmeTable(root, skills, profiles.profiles),
     ],
   };
 }
