@@ -73,9 +73,33 @@ The `oak-skills-sync.yml` workflow only runs on a pull request that Dependabot o
 
 - Check the workflow file exists on the default branch. `oak-skills init` writes it.
 - Check the pull request changes `package.json` or `pnpm-lock.yaml`, which trigger the workflow.
-- Check the GitHub App is installed on the repository, and that the `OAK_SKILLS_APP_ID` and `OAK_SKILLS_APP_KEY` secrets are visible to Dependabot.
+- Check the GitHub App is installed on the repository, and that the `OAK_SKILLS_APP_CLIENT_ID` and `OAK_SKILLS_APP_KEY` secrets are visible to Dependabot.
 
 To sync by hand instead, check out the pull request's branch, run `pnpm install` and `pnpm exec oak-skills sync`, then commit the result with `[dependabot skip]` in the message, so Dependabot can still rebase it.
+
+### Required checks didn't run again after the sync
+
+The sync workflow pushes its commit with a token from Oak's GitHub App, so GitHub runs the pull request's checks again on the new commit. A commit pushed with a workflow's own `GITHUB_TOKEN` wouldn't start them, and the pull request would wait for checks that never report.
+
+- The sync workflow's own run for the App's push shows as skipped. That's expected: there's nothing left to sync.
+- Check the sync commit's author is the App's bot account. If it's `github-actions[bot]`, the workflow file has been changed to push with `GITHUB_TOKEN`. Compare it with the template in the installed package, `node_modules/@oaknational/oak-agent-skills/templates/workflows/oak-skills-sync.yml`.
+- To start the checks by hand, close the pull request and reopen it.
+
+### Dependabot stopped rebasing a pull request
+
+Dependabot stops rebasing a pull request that hasn't merged within 30 days, so merge skills updates promptly. It also stops if someone pushes a commit to it without `[dependabot skip]` in the message. The sync workflow's commit includes it.
+
+To bring a stale pull request up to date, comment `@dependabot recreate` on it. Dependabot rebuilds it from scratch, overwriting any edits, and the sync workflow runs again.
+
+### Staying on an older version
+
+If a release causes a problem in your repository, you can stay on the previous version while it's fixed centrally:
+
+1. Install the version you want at the repository root: `pnpm add -D --save-exact @oaknational/oak-agent-skills@<version>`. In a pnpm workspace that lists packages, add `-w`, as [Subscribing a repository](cli.md#subscribing-a-repository) explains.
+2. Run `pnpm exec oak-skills sync`, then commit `package.json`, the lockfile and the skill folders together.
+3. On the next skills update pull request, comment `@dependabot ignore @oaknational/oak-agent-skills minor version`, using `major` or `patch` instead to match the release you're skipping. Dependabot closes the pull request and doesn't offer that version again.
+
+You'll miss every fix in the meantime, so raise a `skill-feedback` issue saying what went wrong. When it's fixed, comment `@dependabot unignore @oaknational/oak-agent-skills` on a Dependabot pull request to receive updates again; `@dependabot show @oaknational/oak-agent-skills ignore conditions` lists what's ignored.
 
 ### oak-skills promote stopped
 
