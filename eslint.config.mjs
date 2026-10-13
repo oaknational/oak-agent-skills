@@ -12,14 +12,14 @@ export default tseslint.config(
     languageOptions: {
       parserOptions: {
         projectService: {
-          allowDefaultProject: ['eslint.config.mjs'],
+          allowDefaultProject: ['eslint.config.mjs', 'commitlint.config.js'],
         },
         tsconfigRootDir: import.meta.dirname,
       },
     },
   },
   {
-    files: ['**/*.mjs'],
+    files: ['**/*.mjs', '**/*.js'],
     ...tseslint.configs.disableTypeChecked,
   },
 );

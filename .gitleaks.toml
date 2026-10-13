@@ -1,0 +1,32 @@
+# Secrets, using gitleaks' default rules, plus personal data. The package is public
+# and published versions can't be withdrawn, so both are blocked before they're committed.
+
+[extend]
+useDefault = true
+
+[[rules]]
+id = "personal-email-address"
+description = "An email address, which is personal data"
+regex = '''[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}'''
+tags = ["personal-data"]
+
+  # GitHub's noreply addresses, such as a bot's commit author, aren't personal data.
+  # Neither are the domains reserved for examples.
+  [[rules.allowlists]]
+  regexTarget = "match"
+  regexes = [
+    '''@users\.noreply\.github\.com$''',
+    '''^noreply@github\.com$''',
+    '''@example\.(?:com|org|net)$''',
+  ]
+
+[[rules]]
+id = "uk-phone-number"
+description = "A UK phone number, which is personal data"
+regex = '''(?:^|[^\w+])((?:\+44[\s-]?(?:\(0\)[\s-]?)?|\(?0)\d{2,4}\)?[\s-]?\d{3,4}[\s-]?\d{3,4})(?:\W|$)'''
+secretGroup = 1
+tags = ["personal-data"]
+
+  # Lockfile integrity hashes are long runs of letters and digits.
+  [[rules.allowlists]]
+  paths = ['''(?:^|/)pnpm-lock\.yaml$''']

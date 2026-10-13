@@ -18,6 +18,7 @@ While the first iteration is being built, agents follow `docs/plans/agent-build-
 - Lint TypeScript: `pnpm lint`. Lint Markdown: `pnpm lint:md`
 - Spelling, in British English: `pnpm spell`. Add project words to `cspell-words.txt`.
 - Internal links and anchors, offline: `pnpm links` (needs lychee installed)
+- Secrets and personal data across the whole git history: `pnpm secrets` (needs gitleaks installed). Rules are in `.gitleaks.toml`.
 - Run the built tool: `pnpm exec oak-skills --help`
 
 ## Layout

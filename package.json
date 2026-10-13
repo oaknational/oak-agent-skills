@@ -35,9 +35,12 @@
     "lint": "eslint .",
     "lint:md": "markdownlint-cli2",
     "spell": "cspell --no-progress --unique .",
-    "links": "lychee --config lychee.toml ."
+    "links": "lychee --config lychee.toml .",
+    "secrets": "gitleaks git --config .gitleaks.toml --redact --no-banner ."
   },
   "devDependencies": {
+    "@commitlint/cli": "21.2.3",
+    "@commitlint/config-conventional": "21.2.3",
     "@cspell/dict-en-gb": "5.0.35",
     "@eslint/js": "10.0.1",
     "@oaknational/oak-agent-skills": "link:.",
