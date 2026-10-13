@@ -33,7 +33,9 @@ pnpm exec oak-skills init
 
 <!-- prettier-ignore-start -->
 <!-- skills-table:start -->
-No skills have been published yet.
+| Skill | Profile or bundle | What it does |
+| --- | --- | --- |
+| [`oak-code-review`](skills/central/oak-code-review/SKILL.md) | `base` | Reviews a code change for correctness, design, risk and test coverage, and reports findings ranked by how much they matter. Use when asked to review a pull request, a branch, a diff or staged changes, or to check work before it's merged. |
 <!-- skills-table:end -->
 <!-- prettier-ignore-end -->
 

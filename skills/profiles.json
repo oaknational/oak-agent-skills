@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "profiles": {
+    "base": {
+      "description": "Universal SDLC skills for every repository",
+      "skills": ["oak-code-review"]
+    }
+  }
+}
