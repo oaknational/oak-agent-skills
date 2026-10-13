@@ -10,7 +10,7 @@ pnpm exec oak-skills <command> [options]
 
 Every command finds the repository root with git and acts there, whichever folder you run it from. In a pnpm workspace, the packages in folders such as `apps/` and `packages/` are never touched: the skills, the settings and the manifest all live at the root.
 
-Run `pnpm exec oak-skills --help` to list the commands, and `pnpm exec oak-skills <command> --help` for a command's options.
+Run `pnpm exec oak-skills --help` to list the commands, `pnpm exec oak-skills <command> --help` for a command's options, and `pnpm exec oak-skills --version` for the version installed.
 
 ## Subscribing a repository
 
@@ -203,6 +203,20 @@ Until version 1.0.0, a major change is recorded as minor in the changeset, becau
 ### Personal skills
 
 Skills you want only for yourself belong in `~/.claude/skills/` or `~/.agents/skills/` on your own machine, not in a repository. Don't give them the `oak-` prefix: in Claude Code, a personal skill overrides a project skill with the same name.
+
+## Removing a skill
+
+How you remove a skill depends on whose it is:
+
+- **A shared skill your repository doesn't want:** add its name to `exclude` in `oakSkills`, or take it out of `include`, then run `pnpm exec oak-skills sync` and commit the result. `sync` deletes the skill's folder and its Claude Code link. Other repositories keep it.
+- **A skill in your repository's bundle:** remove it from `skills/repos/<code>/` in the central repository, with a changeset. The next release removes it when your repository syncs.
+- **A shared skill, for every repository:** deprecate it first, then remove it after the waiting period, as the [guide to contributing a skill](contributing-a-skill.md#deprecate-a-skill) explains. Removing a shared skill is a breaking change.
+
+`sync` removes a skill even if you've edited it, and warns you, naming each edited file. To keep an improvement, send it to the central repository with `oak-skills promote` first.
+
+## Validating skills in the central repository
+
+`oak-skills validate` checks every skill against the rules in the [guide to contributing a skill](contributing-a-skill.md). It only runs in the central repository, where `pnpm validate` runs it; anywhere else it stops with exit code 1 and suggests `oak-skills check` instead. Given paths, such as `oak-skills validate skills/central/oak-code-review/SKILL.md`, it reports only the skills that hold them, as the pre-commit hook does.
 
 ## Releasing
 
