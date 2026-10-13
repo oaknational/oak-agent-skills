@@ -32,6 +32,8 @@ While the first iteration is being built, agents follow `docs/plans/agent-build-
 - `scripts/`: repository-only scripts, run with `node scripts/<name>.ts`. They never ship.
 - `.github/workflows/ci.yml`: every check on PRs and pushes to `main`. `.github/scripts/install-tool.sh` installs pinned tools with checksums.
 - `.github/workflows/pr-title.yml`: checks that a PR title is a Conventional Commit, because squash merges turn it into the commit on `main`.
+- `.github/CODEOWNERS`: `skills-maintainers` on every line. `todo-engineers-team` is a placeholder for the all-engineers team, and must be replaced before the first release.
+- `.github/pull_request_template.md`: used for every PR, including those `oak-skills promote` opens.
 - `test/`: unit, integration and end-to-end tests. `test/helpers/temp-repo.ts` builds temporary git repositories from `test/fixtures/`.
 
 ## Rules

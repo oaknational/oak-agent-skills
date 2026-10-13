@@ -1,0 +1,58 @@
+name: Skill feedback
+description: Tell us about a skill that gave a wrong or unhelpful answer, or fired at the wrong time.
+labels: [skill-feedback]
+body:
+  - type: markdown
+    attributes:
+      value: >-
+        This repository is public. Don't include personal data, secrets, internal links, or code
+        you couldn't share publicly. To report a security vulnerability, follow SECURITY.md instead.
+  - type: input
+    id: skill
+    attributes:
+      label: Skill
+      description: The skill's name, such as oak-code-review.
+    validations:
+      required: true
+  - type: dropdown
+    id: agent
+    attributes:
+      label: Agent
+      options:
+        - Claude Code
+        - OpenAI Codex
+        - Cursor
+        - GitHub Copilot
+        - Another agent
+    validations:
+      required: true
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What went wrong
+      options:
+        - It gave a wrong or unhelpful answer
+        - It didn't fire when it should have
+        - It fired when it shouldn't have
+        - Something else
+    validations:
+      required: true
+  - type: textarea
+    id: details
+    attributes:
+      label: What happened
+      description: What you asked, what the agent did, and what you expected instead.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Package version
+      description: The version of @oaknational/oak-agent-skills, if you know it.
+  - type: checkboxes
+    id: public
+    attributes:
+      label: Before you submit
+      options:
+        - label: This issue contains nothing that needs to stay private.
+          required: true

@@ -1,0 +1,11 @@
+# The skills maintainers own everything not listed below, such as the tool, templates and workflows.
+* @oaknational/skills-maintainers
+
+# Shared skills and profiles belong to every engineer.
+# todo-engineers-team is a placeholder until the all-engineers team exists. The publish workflow
+# refuses to release while it's here.
+/skills/central/ @oaknational/todo-engineers-team @oaknational/skills-maintainers
+/skills/profiles.json @oaknational/todo-engineers-team @oaknational/skills-maintainers
+
+# Each consuming repository's bundle in skills/repos/<code>/ belongs to that repository's team and
+# the skills maintainers. Add a line here when its folder is created; oak-skills validate checks.

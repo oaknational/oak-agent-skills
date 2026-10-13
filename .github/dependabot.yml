@@ -1,0 +1,31 @@
+# This repository's own dev dependencies and GitHub Actions. The tool pins in
+# .github/scripts/install-tool.sh aren't covered, so update those by hand.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    # Matches how dependencies were first chosen: nothing newer than seven days.
+    cooldown:
+      default-days: 7
+    commit-message:
+      prefix: chore
+      include: scope
+    groups:
+      dev-dependencies:
+        dependency-type: development
+        update-types: [minor, patch]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    commit-message:
+      prefix: ci
+      include: scope
+    groups:
+      actions:
+        update-types: [minor, patch]
