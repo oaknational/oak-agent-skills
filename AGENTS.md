@@ -13,12 +13,14 @@ While the first iteration is being built, agents follow `docs/plans/agent-build-
 - Install: `pnpm install`
 - Build the tool into `dist/`: `pnpm build`
 - Type-check: `pnpm typecheck`
+- Test, with coverage: `pnpm test`. It builds `dist/` first, because end-to-end tests run the built command.
 - Run the built tool: `pnpm exec oak-skills --help`
 
 ## Layout
 
 - `src/`: the `oak-skills` tool. `src/cli.ts` is the entry point; `src/run.ts` dispatches commands.
 - `dist/`: the built tool. It's gitignored.
+- `test/`: unit, integration and end-to-end tests. `test/helpers/temp-repo.ts` builds temporary git repositories from `test/fixtures/`.
 
 ## Rules
 
