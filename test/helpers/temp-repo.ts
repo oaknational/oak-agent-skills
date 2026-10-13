@@ -4,7 +4,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fixturesDir } from './paths.ts';
 
-export type FixtureName = 'single-package' | 'settings-only-workspace' | 'workspace';
+export type FixtureName =
+  'single-package' | 'settings-only-workspace' | 'workspace' | 'central-repo';
 
 export interface TempRepo {
   root: string;
