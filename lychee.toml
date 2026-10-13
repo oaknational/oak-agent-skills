@@ -2,10 +2,13 @@
 offline = true
 include_fragments = "anchor-only"
 no_progress = true
+# Check hidden folders too, such as .agents, .github and .changeset.
+hidden = true
 exclude_path = [
   "node_modules",
   "dist",
   "coverage",
+  "\\.git/",
   # The design record is kept locally and never committed.
   "docs/adr",
   "docs/plans",
