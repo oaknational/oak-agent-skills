@@ -26,6 +26,8 @@ Everyone taking part in this project is expected to follow the [code of conduct]
 
 ### Making a change
 
+To add or change a skill, follow the guide to [contributing a skill](docs/contributing-a-skill.md). It covers where guidance belongs, naming, frontmatter, profiles and versioning.
+
 - Work on a branch and open a pull request against `main`.
 - Give the pull request a [Conventional Commit](https://www.conventionalcommits.org/) title, such as `feat(oak-code-review): check for missing tests`. Pull requests are squash-merged, so the title becomes the commit on `main`.
 - Add a changeset with `pnpm changeset` if you change `skills/`, `templates/` or `src/`, because those folders ship in the package.
