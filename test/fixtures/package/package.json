@@ -1,0 +1,5 @@
+{
+  "name": "@oaknational/oak-agent-skills",
+  "version": "1.2.3",
+  "description": "A stand-in for the installed package, for tests"
+}
