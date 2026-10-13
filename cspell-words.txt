@@ -1,6 +1,7 @@
 agentsmd
 changesets
 commitlint
+cooldowns
 corepack
 esac
 esbuild

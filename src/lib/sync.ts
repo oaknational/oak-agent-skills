@@ -12,7 +12,12 @@ import {
   type Manifest,
 } from './manifest.ts';
 import { readPackageInfo } from './package-info.ts';
-import { readOakSkillsConfig, resolveSkills, type ResolvedSkill } from './profiles.ts';
+import {
+  readOakSkillsConfig,
+  resolveSkills,
+  type OakSkillsConfig,
+  type ResolvedSkill,
+} from './profiles.ts';
 import { findRepositoryRoot, readRootPackageJson } from './root.ts';
 import { applyLinks, linkPath, linkTarget, planLinks, type LinkPlan } from './shims.ts';
 
@@ -49,9 +54,14 @@ function isFolder(path: string): boolean {
   }
 }
 
-export function planSync(cwd: string, packageDir: string = PACKAGE_DIR): SyncPlan {
+// config replaces the settings in package.json, so init can plan a sync before writing them.
+export function planSync(
+  cwd: string,
+  packageDir: string = PACKAGE_DIR,
+  config?: OakSkillsConfig,
+): SyncPlan {
   const root = findRepositoryRoot(cwd);
-  const config = readOakSkillsConfig(readRootPackageJson(root));
+  config ??= readOakSkillsConfig(readRootPackageJson(root));
   const catalogue = readCatalogue(packageDir);
   const { skills, warnings } = resolveSkills(config, catalogue);
   const info = readPackageInfo(pathToFileURL(join(packageDir, 'package.json')));
