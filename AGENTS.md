@@ -20,7 +20,7 @@ While the first iteration is being built, agents follow `docs/plans/agent-build-
 - Internal links and anchors, offline: `pnpm links` (needs lychee installed)
 - Secrets and personal data across the whole git history: `pnpm secrets` (needs gitleaks installed). Rules are in `.gitleaks.toml`.
 - Package contents: `pnpm pack:check` (publint, then `npm pack --dry-run`)
-- Workflow files: `pnpm workflows` (needs actionlint and zizmor installed)
+- Workflow files: `pnpm workflows` (needs actionlint and zizmor installed). For a stricter pass, run `zizmor --offline --persona=auditor .github`.
 - Git hooks (installed by `pnpm install`): pre-commit runs Prettier, ESLint, markdownlint and cspell on staged files, then gitleaks; commit-msg runs commitlint.
 - Pending release notes: `pnpm changeset` adds one; `pnpm changeset:status` checks them. Changes to `skills/`, `templates/` or `src/` need a changeset.
 - Run the built tool: `pnpm exec oak-skills --help`
@@ -31,6 +31,7 @@ While the first iteration is being built, agents follow `docs/plans/agent-build-
 - `dist/`: the built tool. It's gitignored, and `pnpm build` empties it first.
 - `scripts/`: repository-only scripts, run with `node scripts/<name>.ts`. They never ship.
 - `.github/workflows/ci.yml`: every check on PRs and pushes to `main`. `.github/scripts/install-tool.sh` installs pinned tools with checksums.
+- `.github/workflows/pr-title.yml`: checks that a PR title is a Conventional Commit, because squash merges turn it into the commit on `main`.
 - `test/`: unit, integration and end-to-end tests. `test/helpers/temp-repo.ts` builds temporary git repositories from `test/fixtures/`.
 
 ## Rules
