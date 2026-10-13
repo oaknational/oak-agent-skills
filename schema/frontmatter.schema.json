@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/oaknational/oak-agent-skills/schema/frontmatter.schema.json",
+  "title": "Skill frontmatter",
+  "description": "The YAML frontmatter of a SKILL.md file. Only the Agent Skills specification's fields that every agent we support documents are allowed; allowed-tools is left out because it's experimental.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["name", "description", "license", "metadata"],
+  "properties": {
+    "name": {
+      "description": "Lowercase letters, digits and single hyphens, not starting or ending with a hyphen. It must match the skill's folder name.",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+    },
+    "description": {
+      "description": "What the skill does and the kinds of request it's for. Agents use it to decide when to load the skill.",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 1024
+    },
+    "license": {
+      "type": "string",
+      "minLength": 1
+    },
+    "compatibility": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 500
+    },
+    "metadata": {
+      "description": "String keys and string values only, as the specification requires.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["owner", "updated"],
+      "properties": {
+        "owner": {
+          "description": "The GitHub team that owns the skill.",
+          "type": "string",
+          "pattern": "^@oaknational/[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "updated": {
+          "description": "The date the skill's files last changed, as YYYY-MM-DD.",
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+        },
+        "deprecated": {
+          "description": "The name of the skill that replaces this one.",
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "source": {
+          "description": "Where a vendored skill came from, as owner/repository@commit.",
+          "type": "string",
+          "pattern": "^[A-Za-z0-9-]+/[A-Za-z0-9._-]+@[0-9a-f]{7,40}$"
+        }
+      }
+    }
+  }
+}

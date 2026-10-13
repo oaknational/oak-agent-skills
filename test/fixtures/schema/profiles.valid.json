@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "profiles": {
+    "base": {
+      "description": "Universal SDLC skills for every repository",
+      "skills": ["oak-code-review", "oak-pr-authoring", "oak-security-review"]
+    },
+    "frontend": {
+      "description": "Repositories that render an interface for people",
+      "skills": ["oak-accessibility-review"]
+    }
+  }
+}

@@ -9,6 +9,7 @@ markdownlint
 NOSYSTEM
 oaknational
 publint
+SDLC
 thenational
 vendored
 vitest
