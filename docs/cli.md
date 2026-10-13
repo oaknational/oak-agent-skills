@@ -12,6 +12,51 @@ Every command finds the repository root with git and acts there, whichever folde
 
 Run `pnpm exec oak-skills --help` to list the commands, and `pnpm exec oak-skills <command> --help` for a command's options.
 
+## Subscribing a repository
+
+To start receiving Oak's skills, add the package as a dev dependency at the repository root, then run `init`:
+
+```sh
+pnpm add -D @oaknational/oak-agent-skills
+pnpm exec oak-skills init --bundle <code> --dry-run
+pnpm exec oak-skills init --bundle <code>
+```
+
+In a pnpm workspace whose `pnpm-workspace.yaml` lists packages, add `-w` to `pnpm add` so the package goes in the root `package.json`. Leave out `--bundle` if the repository has no bundle of its own skills in the central repository yet.
+
+### What init does
+
+`init` only creates what's missing, and never overwrites a file. It:
+
+1. writes a starter `AGENTS.md`, about 100 lines of orientation for agents, for your team to fill in;
+2. writes `CLAUDE.md` holding `@AGENTS.md`, so Claude Code reads the same file;
+3. writes two workflows: `.github/workflows/oak-skills-check.yml`, which runs `oak-skills check` on every pull request, and `.github/workflows/oak-skills-sync.yml`, which syncs the skills on Dependabot's update pull requests;
+4. writes `.github/dependabot.yml`, checking npm daily with the skills package in a group of its own;
+5. adds `oakSkills` to the root `package.json`, with the `base` profile and the bundle you named;
+6. runs the first sync.
+
+Run it with `--dry-run` first to see what it would do without changing anything.
+
+### Files you already have
+
+When a file already exists, `init` leaves it alone and prints what to add to it instead:
+
+- **`CLAUDE.md`**: add a line holding just `@AGENTS.md` at the top.
+- **`.github/dependabot.yml`**: give `@oaknational/oak-agent-skills` a group of its own in the npm update, listed before any catch-all group, so its updates are never bundled with others.
+- **A Dependabot `cooldown`**: exempt the package in its `exclude` list, or every skills release waits out the cooldown.
+- **pnpm's `minimumReleaseAge`** in `pnpm-workspace.yaml`: add the package to `minimumReleaseAgeExclude`, for the same reason.
+
+### Before the first update arrives
+
+`init` finishes with a checklist of things it can't do for you:
+
+- The organisation's oak-skills GitHub App is installed on the repository. The sync workflow pushes with its token, so that required checks run again on the sync commit.
+- The organisation Dependabot secrets `OAK_SKILLS_APP_CLIENT_ID` and `OAK_SKILLS_APP_KEY` are available to the repository.
+- `package.json` has a `packageManager` field naming pnpm, which the workflows use to install the right version.
+- `oak-skills check` is a required status check, so an edited or out-of-date skill can't merge.
+
+Then review and commit what `init` wrote, including `.agents/skills/` and `.claude/skills/`, and fill in `AGENTS.md` with your team.
+
 ## Syncing and updating
 
 `oak-skills sync` writes the skills your repository subscribes to into `.agents/skills/`, and links each one into `.claude/skills/` so Claude Code can see it too. Commit both folders, so every clone has the skills.
