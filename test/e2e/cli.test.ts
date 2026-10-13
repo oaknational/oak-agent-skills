@@ -14,9 +14,17 @@ describe('the built oak-skills command', () => {
     expect(result.stdout).toBe(`${readPackageInfo().version}\n`);
   });
 
-  it('exits 1 on an unknown command', () => {
+  it('exits with the usage code on an unknown command', () => {
     const result = oakSkills('not-a-command');
-    expect(result.status).toBe(1);
+    expect(result.status).toBe(64);
     expect(result.stderr).toContain('Unknown command: not-a-command');
+  });
+});
+
+describe('the built oak-skills command, with no arguments', () => {
+  it('prints usage and exits 0', () => {
+    const result = spawnSync(process.execPath, [builtCli], { encoding: 'utf8' });
+    expect(result.status).toBe(0);
+    expect(result.stdout).toContain('Usage: oak-skills <command> [options]');
   });
 });

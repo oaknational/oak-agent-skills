@@ -27,7 +27,8 @@ While the first iteration is being built, agents follow `docs/plans/agent-build-
 
 ## Layout
 
-- `src/`: the `oak-skills` tool. `src/cli.ts` is the entry point; `src/run.ts` dispatches commands.
+- `src/`: the `oak-skills` tool. `src/cli.ts` is the entry point, and `src/run.ts` parses arguments and dispatches to `src/commands/<name>.ts`. Shared code is in `src/lib/`.
+- Exit codes are in `src/lib/exit-codes.ts`. Throw `OakSkillsError` from `src/lib/errors.ts` for any failure the user can act on.
 - `dist/`: the built tool. It's gitignored, and `pnpm build` empties it first.
 - `scripts/`: repository-only scripts, run with `node scripts/<name>.ts`. They never ship.
 - `.github/workflows/ci.yml`: every check on PRs and pushes to `main`. `.github/scripts/install-tool.sh` installs pinned tools with checksums.
