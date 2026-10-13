@@ -2,6 +2,8 @@ import { parseArgs } from 'node:util';
 import type { Command, Output } from './commands/command.ts';
 import { commands as defaultCommands } from './commands/index.ts';
 import { OakSkillsError, UsageError } from './lib/errors.ts';
+import type { GitHub } from './lib/github.ts';
+import type { Prompt } from './lib/prompt.ts';
 import { ExitCode } from './lib/exit-codes.ts';
 import { readPackageInfo } from './lib/package-info.ts';
 
@@ -31,6 +33,9 @@ export interface RunOptions {
   commands?: readonly Command[];
   cwd?: string;
   packageDir?: string;
+  github?: GitHub;
+  prompt?: Prompt;
+  now?: Date;
 }
 
 export async function run(
@@ -83,6 +88,9 @@ export async function run(
       output,
       cwd: options.cwd ?? process.cwd(),
       ...(options.packageDir === undefined ? {} : { packageDir: options.packageDir }),
+      ...(options.github === undefined ? {} : { github: options.github }),
+      ...(options.prompt === undefined ? {} : { prompt: options.prompt }),
+      ...(options.now === undefined ? {} : { now: options.now }),
     });
   } catch (error) {
     if (error instanceof OakSkillsError) {
