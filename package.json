@@ -40,7 +40,7 @@
     "secrets": "gitleaks git --config .gitleaks.toml --redact --no-banner .",
     "changeset:status": "changeset status --since=main",
     "pack:check": "pnpm build && publint --strict && npm pack --dry-run --ignore-scripts",
-    "workflows": "actionlint && zizmor --offline .github",
+    "workflows": "actionlint .github/workflows/*.yml templates/workflows/*.yml && zizmor --offline .github templates/workflows/*.yml",
     "readme:skills": "node scripts/readme-skills-table.ts",
     "validate": "node src/cli.ts validate"
   },
