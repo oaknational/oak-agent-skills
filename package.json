@@ -38,7 +38,9 @@
     "spell": "cspell --no-progress --unique .",
     "links": "lychee --config lychee.toml .",
     "secrets": "gitleaks git --config .gitleaks.toml --redact --no-banner .",
-    "changeset:status": "changeset status --since=main"
+    "changeset:status": "changeset status --since=main",
+    "pack:check": "pnpm build && publint --strict && npm pack --dry-run --ignore-scripts",
+    "workflows": "actionlint && zizmor --offline .github"
   },
   "devDependencies": {
     "@changesets/cli": "3.0.3",
