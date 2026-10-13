@@ -17,6 +17,10 @@ export default tseslint.config(
         tsconfigRootDir: import.meta.dirname,
       },
     },
+    rules: {
+      // It contradicts no-non-null-assertion from the strict set, which we keep.
+      '@typescript-eslint/non-nullable-type-assertion-style': 'off',
+    },
   },
   {
     files: ['**/*.mjs', '**/*.js'],

@@ -1,0 +1,8 @@
+{
+  "version": 2,
+  "profiles": {
+    "Base": {
+      "skills": ["code-review", "oak-code-review", "oak-code-review"]
+    }
+  }
+}

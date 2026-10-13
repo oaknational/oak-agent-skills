@@ -21,13 +21,15 @@ While the first iteration is being built, agents follow `docs/plans/agent-build-
 - Secrets and personal data across the whole git history: `pnpm secrets` (needs gitleaks installed). Rules are in `.gitleaks.toml`.
 - Package contents: `pnpm pack:check` (publint, then `npm pack --dry-run`)
 - Workflow files: `pnpm workflows` (needs actionlint and zizmor installed). For a stricter pass, run `zizmor --offline --persona=auditor .github`.
+- Skills: `pnpm exec oak-skills validate` checks every skill against our rules. Build first with `pnpm build`.
 - Git hooks (installed by `pnpm install`): pre-commit runs Prettier, ESLint, markdownlint and cspell on staged files, then gitleaks; commit-msg runs commitlint.
 - Pending release notes: `pnpm changeset` adds one; `pnpm changeset:status` checks them. Changes to `skills/`, `templates/` or `src/` need a changeset.
 - Run the built tool: `pnpm exec oak-skills --help`
 
 ## Layout
 
-- `src/`: the `oak-skills` tool. `src/cli.ts` is the entry point; `src/run.ts` dispatches commands.
+- `src/`: the `oak-skills` tool. `src/cli.ts` is the entry point, and `src/run.ts` parses arguments and dispatches to `src/commands/<name>.ts`. Shared code is in `src/lib/`.
+- Exit codes are in `src/lib/exit-codes.ts`. Throw `OakSkillsError` from `src/lib/errors.ts` for any failure the user can act on.
 - `dist/`: the built tool. It's gitignored, and `pnpm build` empties it first.
 - `scripts/`: repository-only scripts, run with `node scripts/<name>.ts`. They never ship.
 - `.github/workflows/ci.yml`: every check on PRs and pushes to `main`. `.github/scripts/install-tool.sh` installs pinned tools with checksums.

@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/oaknational/oak-agent-skills/schema/profiles.schema.json",
+  "title": "Profiles",
+  "description": "skills/profiles.json: each named profile and the shared skills it holds.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "profiles"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "version": { "const": 1 },
+    "profiles": {
+      "type": "object",
+      "propertyNames": { "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["description", "skills"],
+        "properties": {
+          "description": { "type": "string", "minLength": 1 },
+          "skills": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": { "type": "string", "pattern": "^oak-[a-z0-9]+(?:-[a-z0-9]+)*$" }
+          }
+        }
+      }
+    }
+  }
+}

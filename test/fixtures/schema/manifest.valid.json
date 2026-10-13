@@ -1,0 +1,27 @@
+{
+  "manifestVersion": 1,
+  "package": { "name": "@oaknational/oak-agent-skills", "version": "0.1.0" },
+  "config": {
+    "profiles": ["base"],
+    "bundle": "owa",
+    "include": [],
+    "exclude": ["oak-security-review"]
+  },
+  "skills": {
+    "oak-code-review": {
+      "source": "skills/central/oak-code-review",
+      "files": { "SKILL.md": "0000000000000000000000000000000000000000000000000000000000000000" }
+    },
+    "owa-routing": {
+      "source": "skills/repos/owa/owa-routing",
+      "files": {
+        "SKILL.md": "1111111111111111111111111111111111111111111111111111111111111111",
+        "references/routes.md": "2222222222222222222222222222222222222222222222222222222222222222"
+      }
+    }
+  },
+  "symlinks": [
+    { "path": ".claude/skills/oak-code-review", "target": "../../.agents/skills/oak-code-review" },
+    { "path": ".claude/skills/owa-routing", "target": "../../.agents/skills/owa-routing" }
+  ]
+}
