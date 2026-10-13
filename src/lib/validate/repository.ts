@@ -7,6 +7,7 @@ import type { Problem } from './problem.ts';
 import { checkProfiles, type Profiles } from './profiles.ts';
 import type { SchemaName, SchemaValidator } from './schemas.ts';
 import { checkSkill, type CheckedSkill } from './skill-checks.ts';
+import { checkUpdatedDates } from './updated-dates.ts';
 
 export interface ValidationResult {
   skills: CheckedSkill[];
@@ -27,6 +28,7 @@ export function validateRepository(
   root: string,
   deps: Pick<DevDependencies, 'yaml'>,
   validators: Record<SchemaName, SchemaValidator>,
+  env: NodeJS.ProcessEnv = process.env,
 ): ValidationResult {
   const found = findSkills(root);
   const skills = found.skills.map((location) =>
@@ -41,6 +43,7 @@ export function validateRepository(
       ...found.problems,
       ...skills.flatMap((skill) => skill.problems),
       ...profiles.problems,
+      ...checkUpdatedDates(root, skills, deps, env),
       ...checkCodeowners(root, bundleCodes(root)),
     ],
   };
