@@ -35,7 +35,7 @@
     "format:check": "prettier --check .",
     "lint": "eslint .",
     "lint:md": "markdownlint-cli2",
-    "spell": "cspell --no-progress --unique .",
+    "spell": "cspell --no-progress --unique --dot .",
     "links": "lychee --config lychee.toml .",
     "secrets": "gitleaks git --config .gitleaks.toml --redact --no-banner .",
     "changeset:status": "changeset status --since=main",

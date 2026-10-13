@@ -4,6 +4,8 @@
   "import": ["@cspell/dict-en-gb/cspell-ext.json"],
   "useGitignore": true,
   "ignorePaths": [
+    ".git/**",
+    ".husky/_/**",
     "node_modules/**",
     "dist/**",
     "coverage/**",

@@ -2,11 +2,14 @@ changesets
 commitlint
 corepack
 esbuild
+frontmatter
 gitleaks
 lychee
 markdownlint
 NOSYSTEM
 oaknational
 publint
+thenational
+vendored
 vitest
 zizmor
