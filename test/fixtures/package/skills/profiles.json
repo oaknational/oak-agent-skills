@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "profiles": {
+    "base": {
+      "description": "Every repository",
+      "skills": ["oak-alpha", "oak-beta"]
+    },
+    "frontend": {
+      "description": "Repositories with an interface",
+      "skills": ["oak-gamma"]
+    }
+  }
+}
