@@ -1,9 +1,9 @@
 # Oak Accessibility Checklist (WCAG 2.2 AA)
 
-Run before publishing any artefact. AA is the floor; apply Oak's 7:1 contrast where the brand
+Run before signing off interface code or a review of it. AA is the floor; apply Oak's 7:1 contrast where the brand
 applies. Tick only what you've actually verified — if you can't confirm an item, treat it as failed.
 
-## Every artefact
+## Every interface
 
 - [ ] Meaningful images/charts have concise alt text; decorative ones marked decorative
 - [ ] Real headings in order (no skipped levels, no bold-as-heading); logical reading order
@@ -14,15 +14,7 @@ applies. Tick only what you've actually verified — if you can't confirm an ite
 - [ ] Document/page language set; real selectable text (no text baked into images)
 - [ ] Usable at 200% zoom; reflows to one column at 320px; zoom not disabled
 
-## Documents, decks, PDFs
-
-- [ ] Built-in heading styles / unique slide titles used throughout
-- [ ] Reading/announcement order matches visual order
-- [ ] Tables simple, with header rows/columns; no merged cells used for layout
-- [ ] Authoring tool's accessibility checker run and errors cleared
-- [ ] PDFs exported tagged, with title + language; checked
-
-## Web and interactive (incl. quizzes)
+## Web and interactive (including quizzes)
 
 - [ ] Fully keyboard operable; visible focus; no keyboard trap; focus never obscured (2.4.11)
 - [ ] Pointer targets ≥ 24×24 px (2.5.8); dragging has a tap alternative (2.5.7)
@@ -33,10 +25,9 @@ applies. Tick only what you've actually verified — if you can't confirm an ite
 
 ## Media
 
-- [ ] Video has accurate, reviewed captions (a transcript is recommended, not required at AA)
-- [ ] Audio-only media has a transcript
-- [ ] Audio description (or description-in-narration) where visual-only info exists
-- [ ] Nothing flashes more than 3×/second; no autoplay with sound; reduced-motion respected
+- [ ] Video players show synchronised captions; audio-only media links to a transcript
+- [ ] Nothing flashes more than 3×/second; no autoplay with sound; moving content can be paused
+- [ ] Reduced-motion preference respected
 
 ## Sign-off
 

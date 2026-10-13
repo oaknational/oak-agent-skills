@@ -47,9 +47,28 @@ other interactive learning content. This is where the WCAG 2.2 additions bite ha
 - Usable at **200% zoom** and **reflows to one column at 320px** (1.4.4/1.4.10); never set
   `user-scalable=no`.
 
-## Media, status, and live updates
+## Embedded media and motion
 
-- Embedded video/audio: captions + transcript (see `references/media.md`).
+What the code controls about video, audio and animation:
+
+- **Captions.** Video players load and expose synchronised captions (WCAG 1.2.2, A), with a visible
+  control to turn them on. Don't ship a player that can't show the captions the content has.
+- **Transcripts.** Audio-only media links to a transcript (1.2.1, A). For video, a transcript link is
+  strongly recommended, and placed next to the player.
+- **No autoplay with sound.** If media plays automatically for more than 3 seconds, provide a pause/
+  stop/mute control (2.2.2); better, don't autoplay with sound at all.
+- **Pause controls.** Moving, looping or auto-updating content, such as carousels and looping
+  animations or GIFs, can be paused, stopped or hidden (2.2.2).
+- **No flashing** more than **three times per second** (2.3.1). This is a seizure-safety criterion,
+  not a nicety. Check animated explainers and transitions.
+- **Respect reduced motion.** Honour `prefers-reduced-motion`, and avoid large parallax or
+  auto-motion that can trigger vestibular issues. Animation must not carry information that's
+  unavailable in text.
+- Player controls themselves meet the rest of this page: keyboard operable, labelled, visible focus
+  and large enough targets.
+
+## Status and live updates
+
 - **Status messages** (e.g. "Answer saved", "3 of 10 correct") are announced to assistive tech
   without moving focus (4.1.3).
 

@@ -10,7 +10,6 @@ esbuild
 fieldset
 frontmatter
 gitleaks
-incl
 lychee
 markdownlint
 NOSYSTEM
