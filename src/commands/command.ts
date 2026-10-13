@@ -12,6 +12,8 @@ export interface CommandContext {
   positionals: string[];
   output: Output;
   cwd: string;
+  // The installed package to read skills from. Only tests set it.
+  packageDir?: string;
 }
 
 export interface Command {

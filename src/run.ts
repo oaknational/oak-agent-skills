@@ -30,6 +30,7 @@ function commandUsage(command: Command): string {
 export interface RunOptions {
   commands?: readonly Command[];
   cwd?: string;
+  packageDir?: string;
 }
 
 export async function run(
@@ -81,6 +82,7 @@ export async function run(
       positionals: parsed.positionals,
       output,
       cwd: options.cwd ?? process.cwd(),
+      ...(options.packageDir === undefined ? {} : { packageDir: options.packageDir }),
     });
   } catch (error) {
     if (error instanceof OakSkillsError) {
