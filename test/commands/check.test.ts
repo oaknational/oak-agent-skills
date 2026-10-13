@@ -99,4 +99,26 @@ describe('oak-skills check', () => {
     expect(result.err).toContain('Fix: correct the oakSkills settings in the root package.json.');
     expect(result.err).toContain(`See ${docs}#exit-code-5`);
   });
+
+  it('passes with a warning when AGENTS.md is long', async () => {
+    const { root } = synced();
+    writeTree(root, { 'AGENTS.md': '# Repository\n'.repeat(120) });
+    const result = await check(root);
+    expect(result.code).toBe(0);
+    expect(result.err).toContain('Warning: AGENTS.md has 120 lines.');
+  });
+
+  it('fails with exit code 6 when AGENTS.md files pass 32 KiB on a path, above every other code', async () => {
+    const { root } = synced();
+    writeTree(root, { 'AGENTS.md': 'x'.repeat(30_000), 'docs/AGENTS.md': 'y'.repeat(3_000) });
+    setOakSkills(root, { profiles: ['nope'] });
+    const result = await check(root);
+    expect(result.code).toBe(6);
+    expect(result.err).toContain(
+      'AGENTS.md too large:\n  AGENTS.md + docs/AGENTS.md total 33000 bytes',
+    );
+    expect(result.err).toContain('Configuration problems:');
+    expect(result.err).toContain('oak-skills check failed: AGENTS.md too large (exit code 6).');
+    expect(result.err).toContain(`See ${docs}#exit-code-6`);
+  });
 });

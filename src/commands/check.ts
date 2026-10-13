@@ -1,3 +1,4 @@
+import { checkAgentsMd } from '../lib/agents-md.ts';
 import { ExitCode } from '../lib/exit-codes.ts';
 import { computeStatus, statusExitCode } from '../lib/status.ts';
 import type { Command } from './command.ts';
@@ -20,7 +21,11 @@ export const check: Command = {
   options: {},
   run: ({ cwd, output, packageDir }) => {
     const report = computeStatus(cwd, packageDir);
-    const exitCode = statusExitCode(report);
+    const agentsMd = checkAgentsMd(report.root);
+    for (const warning of agentsMd.warnings) output.err(`Warning: ${warning}`);
+    // An oversized AGENTS.md is independent of the skill settings, so it outranks every other code.
+    const exitCode =
+      agentsMd.failures.length > 0 ? ExitCode.AgentsMdTooLarge : statusExitCode(report);
     if (exitCode === ExitCode.Ok) {
       output.out(
         `oak-skills check passed: ${String(report.clean.length)} skill${report.clean.length === 1 ? '' : 's'} match version ${report.toolVersion}.`,
@@ -52,6 +57,11 @@ export const check: Command = {
       `if the change improves the skill, send it to the central repository with "oak-skills promote ${skills.length === 1 ? (skills[0] ?? '<skill>') : '<skill>'}". Otherwise revert it, or run "oak-skills sync" to restore the synced copy.`,
     );
     problem('Out of date', report.outOfDate, 'run "oak-skills sync" and commit the result.');
+    problem(
+      'AGENTS.md too large',
+      agentsMd.failures,
+      'keep each AGENTS.md to about 100 lines of orientation, and move how-to guidance into skills.',
+    );
 
     output.err(
       `oak-skills check failed: ${String(STATUS_NAMES[exitCode])} (exit code ${String(exitCode)}).`,
