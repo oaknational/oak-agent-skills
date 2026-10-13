@@ -42,7 +42,8 @@
     "pack:check": "pnpm build && publint --strict && npm pack --dry-run --ignore-scripts",
     "workflows": "actionlint .github/workflows/*.yml templates/workflows/*.yml && zizmor --offline .github templates/workflows/*.yml",
     "readme:skills": "node scripts/readme-skills-table.ts",
-    "validate": "node src/cli.ts validate"
+    "validate": "node src/cli.ts validate",
+    "publish:gate": "pnpm build && node scripts/check-package.ts"
   },
   "devDependencies": {
     "@changesets/cli": "3.0.3",
