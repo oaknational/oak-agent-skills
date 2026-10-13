@@ -1,0 +1,16 @@
+# Policy for Cisco skill-scanner, used by .github/workflows/skill-scan.yml.
+#
+# It starts from the scanner's balanced preset. Add a suppression only for a finding the skills
+# maintainers have reviewed and agreed is a false positive, such as a security skill describing an
+# attack. Scope it to the rule, skill and file, say why, and give it an expiry date, for example:
+#
+#   suppressions:
+#     - rule_id: <rule from the scan log>
+#       skills: [oak-security-review]
+#       paths: [references/checklist.md]
+#       reason: Describes injection attacks so reviewers can spot them; it doesn't perform one.
+#       expires: '2027-06-30'
+policy_name: oak-agent-skills
+policy_version: '1.0'
+preset_base: balanced
+suppressions: []
