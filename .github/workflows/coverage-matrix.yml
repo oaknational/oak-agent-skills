@@ -1,0 +1,76 @@
+name: Coverage matrix
+
+# Lists the organisation's repositories that use @oaknational/oak-agent-skills, with their
+# versions, settings and anything worth a look, as a table on this run's summary page. The data
+# is also saved as an artifact, so weeks can be compared. It reads public files only.
+on:
+  schedule:
+    - cron: '0 7 * * 1'
+  workflow_dispatch:
+    inputs:
+      include-sandbox:
+        description: Include the sandbox repository, as during the rehearsal
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: coverage-matrix
+  cancel-in-progress: false
+
+jobs:
+  matrix:
+    name: Build the coverage matrix
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+      - name: Scan the organisation
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          ORG: ${{ github.repository_owner }}
+          INCLUDE_SANDBOX: ${{ inputs.include-sandbox }}
+          OUTPUT: coverage-matrix.json
+        run: node scripts/coverage-matrix.ts
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: coverage-matrix
+          path: coverage-matrix.json
+          if-no-files-found: error
+          retention-days: 90
+
+  report-failure:
+    name: Report a failed run
+    # GitHub only emails a scheduled run's failure to whoever last edited the workflow.
+    needs: matrix
+    if: failure() && github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      issues: write # to open an issue for the skills maintainers
+    steps:
+      - name: Open or update an issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          title="The weekly coverage matrix failed"
+          body="The scheduled coverage matrix failed: ${RUN_URL}
+
+          @oaknational/skills-maintainers, please look at the run's log."
+          existing="$(gh issue list --repo "$REPO" --state open --search "\"${title}\" in:title" --json number --jq '.[0].number')"
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --repo "$REPO" --body "$body"
+          else
+            gh issue create --repo "$REPO" --title "$title" --body "$body"
+          fi
