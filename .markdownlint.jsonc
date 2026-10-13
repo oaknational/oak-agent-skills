@@ -1,0 +1,9 @@
+{
+  "default": true,
+  // Prose is wrapped by sentence, not by column.
+  "MD013": false,
+  // Changesets writes the same headings under each release.
+  "MD024": { "siblings_only": true },
+  // Every image needs alt text that says what it shows.
+  "MD045": true,
+}

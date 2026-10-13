@@ -1,0 +1,5 @@
+{
+  "extends": "../.markdownlint.jsonc",
+  // Templates in .github start with instructions in a comment, then their sections.
+  "MD041": false,
+}

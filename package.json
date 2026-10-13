@@ -27,7 +27,7 @@
   },
   "scripts": {
     "prepare": "husky",
-    "build": "tsc -p tsconfig.build.json",
+    "build": "node scripts/clean.ts && tsc -p tsconfig.build.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run --coverage",
     "test:watch": "vitest",
@@ -35,10 +35,12 @@
     "format:check": "prettier --check .",
     "lint": "eslint .",
     "lint:md": "markdownlint-cli2",
-    "spell": "cspell --no-progress --unique .",
+    "spell": "cspell --no-progress --unique --dot .",
     "links": "lychee --config lychee.toml .",
     "secrets": "gitleaks git --config .gitleaks.toml --redact --no-banner .",
-    "changeset:status": "changeset status --since=main"
+    "changeset:status": "changeset status --since=main",
+    "pack:check": "pnpm build && publint --strict && npm pack --dry-run --ignore-scripts",
+    "workflows": "actionlint && zizmor --offline .github"
   },
   "devDependencies": {
     "@changesets/cli": "3.0.3",
@@ -55,6 +57,7 @@
     "lint-staged": "17.6.0",
     "markdownlint-cli2": "0.23.3",
     "prettier": "3.9.9",
+    "publint": "0.3.25",
     "typescript": "6.0.3",
     "typescript-eslint": "8.71.1",
     "vitest": "5.0.3"

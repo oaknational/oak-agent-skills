@@ -10,7 +10,7 @@ While the first iteration is being built, agents follow `docs/plans/agent-build-
 
 ## Commands
 
-- Install: `pnpm install`
+- Install: `pnpm install`. Developing needs Node 22.18 or later, which runs the TypeScript in `scripts/` directly; the published tool supports Node 22 and later.
 - Build the tool into `dist/`: `pnpm build`
 - Type-check: `pnpm typecheck`
 - Test, with coverage: `pnpm test`. It builds `dist/` first, because end-to-end tests run the built command.
@@ -19,6 +19,8 @@ While the first iteration is being built, agents follow `docs/plans/agent-build-
 - Spelling, in British English: `pnpm spell`. Add project words to `cspell-words.txt`.
 - Internal links and anchors, offline: `pnpm links` (needs lychee installed)
 - Secrets and personal data across the whole git history: `pnpm secrets` (needs gitleaks installed). Rules are in `.gitleaks.toml`.
+- Package contents: `pnpm pack:check` (publint, then `npm pack --dry-run`)
+- Workflow files: `pnpm workflows` (needs actionlint and zizmor installed). For a stricter pass, run `zizmor --offline --persona=auditor .github`.
 - Git hooks (installed by `pnpm install`): pre-commit runs Prettier, ESLint, markdownlint and cspell on staged files, then gitleaks; commit-msg runs commitlint.
 - Pending release notes: `pnpm changeset` adds one; `pnpm changeset:status` checks them. Changes to `skills/`, `templates/` or `src/` need a changeset.
 - Run the built tool: `pnpm exec oak-skills --help`
@@ -26,7 +28,12 @@ While the first iteration is being built, agents follow `docs/plans/agent-build-
 ## Layout
 
 - `src/`: the `oak-skills` tool. `src/cli.ts` is the entry point; `src/run.ts` dispatches commands.
-- `dist/`: the built tool. It's gitignored.
+- `dist/`: the built tool. It's gitignored, and `pnpm build` empties it first.
+- `scripts/`: repository-only scripts, run with `node scripts/<name>.ts`. They never ship.
+- `.github/workflows/ci.yml`: every check on PRs and pushes to `main`. `.github/scripts/install-tool.sh` installs pinned tools with checksums.
+- `.github/workflows/pr-title.yml`: checks that a PR title is a Conventional Commit, because squash merges turn it into the commit on `main`.
+- `.github/CODEOWNERS`: `skills-maintainers` on every line. `todo-engineers-team` is a placeholder for the all-engineers team, and must be replaced before the first release.
+- `.github/pull_request_template.md`: used for every PR, including those `oak-skills promote` opens.
 - `test/`: unit, integration and end-to-end tests. `test/helpers/temp-repo.ts` builds temporary git repositories from `test/fixtures/`.
 
 ## Rules
