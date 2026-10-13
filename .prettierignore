@@ -1,0 +1,7 @@
+pnpm-lock.yaml
+dist/
+coverage/
+CHANGELOG.md
+# The design record is kept locally and never committed.
+docs/adr/
+docs/plans/

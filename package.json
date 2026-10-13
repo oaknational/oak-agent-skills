@@ -1,0 +1,62 @@
+{
+  "name": "@oaknational/oak-agent-skills",
+  "version": "0.0.0",
+  "description": "Oak National Academy's shared agent skills, and the oak-skills tool that syncs them into a repository",
+  "license": "MIT",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/oaknational/oak-agent-skills.git"
+  },
+  "homepage": "https://github.com/oaknational/oak-agent-skills#readme",
+  "bugs": "https://github.com/oaknational/oak-agent-skills/issues",
+  "bin": {
+    "oak-skills": "dist/cli.js"
+  },
+  "files": [
+    "skills/",
+    "templates/",
+    "dist/"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "packageManager": "pnpm@11.2.0",
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "prepare": "husky",
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run --coverage",
+    "test:watch": "vitest",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "eslint .",
+    "lint:md": "markdownlint-cli2",
+    "spell": "cspell --no-progress --unique .",
+    "links": "lychee --config lychee.toml .",
+    "secrets": "gitleaks git --config .gitleaks.toml --redact --no-banner .",
+    "changeset:status": "changeset status --since=main"
+  },
+  "devDependencies": {
+    "@changesets/cli": "3.0.3",
+    "@commitlint/cli": "21.2.3",
+    "@commitlint/config-conventional": "21.2.3",
+    "@cspell/dict-en-gb": "5.0.35",
+    "@eslint/js": "10.0.1",
+    "@oaknational/oak-agent-skills": "link:.",
+    "@types/node": "22.20.5",
+    "@vitest/coverage-v8": "5.0.3",
+    "cspell": "10.3.6",
+    "eslint": "10.12.0",
+    "husky": "9.1.7",
+    "lint-staged": "17.6.0",
+    "markdownlint-cli2": "0.23.3",
+    "prettier": "3.9.9",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.71.1",
+    "vitest": "5.0.3"
+  }
+}

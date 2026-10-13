@@ -1,0 +1,8 @@
+pnpm exec lint-staged
+
+# A skipped secret scan would let a secret into public history, so a missing gitleaks stops the commit.
+if ! command -v gitleaks >/dev/null 2>&1; then
+  echo "gitleaks isn't installed, so the secret and personal-data scan can't run. See CONTRIBUTING.md." >&2
+  exit 1
+fi
+gitleaks git --pre-commit --staged --config .gitleaks.toml --redact --no-banner .

@@ -1,0 +1,4 @@
+# Settings only, with no packages, as pnpm 10 and later allow.
+minimumReleaseAge: 10080
+onlyBuiltDependencies:
+  - esbuild
