@@ -1,11 +1,12 @@
-import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
+import { readFileSync, writeFileSync } from 'node:fs';
+import { TROUBLESHOOTING_ANCHORS } from '../../src/commands/check.ts';
 import { applySync, planSync } from '../../src/lib/sync.ts';
 import { run } from '../../src/run.ts';
 import { capture } from '../helpers/capture.ts';
 import { copyPackage, setOakSkills, setPackageVersion } from '../helpers/consumer.ts';
-import { packageFixture } from '../helpers/paths.ts';
+import { packageFixture, repoRoot } from '../helpers/paths.ts';
 import { createTempRepo, type TempRepo } from '../helpers/temp-repo.ts';
 import { removeTree, writeTree } from '../helpers/tree.ts';
 
@@ -57,7 +58,7 @@ describe('oak-skills check', () => {
         '  Fix: if the change improves the skill, send it to the central repository with "oak-skills promote oak-alpha". Otherwise revert it, or run "oak-skills sync" to restore the synced copy.',
         '',
         'oak-skills check failed: edited (exit code 1).',
-        `See ${docs}#exit-code-1`,
+        `See ${docs}#exit-code-1-a-synced-skill-was-edited`,
       ].join('\n'),
     });
   });
@@ -79,7 +80,7 @@ describe('oak-skills check', () => {
     const result = await check(root, newer);
     expect(result.code).toBe(2);
     expect(result.err).toContain('Fix: run "oak-skills sync" and commit the result.');
-    expect(result.err).toContain(`See ${docs}#exit-code-2`);
+    expect(result.err).toContain(`See ${docs}#exit-code-2-the-skills-are-out-of-date`);
   });
 
   it('fails with exit code 4 on unmanaged folders', async () => {
@@ -97,7 +98,7 @@ describe('oak-skills check', () => {
     const result = await check(root);
     expect(result.code).toBe(5);
     expect(result.err).toContain('Fix: correct the oakSkills settings in the root package.json.');
-    expect(result.err).toContain(`See ${docs}#exit-code-5`);
+    expect(result.err).toContain(`See ${docs}#exit-code-5-a-configuration-problem`);
   });
 
   it('passes with a warning when AGENTS.md is long', async () => {
@@ -119,6 +120,27 @@ describe('oak-skills check', () => {
     );
     expect(result.err).toContain('Configuration problems:');
     expect(result.err).toContain('oak-skills check failed: AGENTS.md too large (exit code 6).');
-    expect(result.err).toContain(`See ${docs}#exit-code-6`);
+    expect(result.err).toContain(`See ${docs}#exit-code-6-agentsmd-is-too-large`);
   });
+});
+
+// GitHub's heading anchors: lower case, punctuation removed, spaces turned into hyphens.
+function anchor(heading: string): string {
+  return heading
+    .toLowerCase()
+    .replace(/[^a-z0-9 -]/g, '')
+    .replace(/ /g, '-');
+}
+
+describe('the troubleshooting links', () => {
+  it.each(Object.entries(TROUBLESHOOTING_ANCHORS))(
+    'exit code %s links to a heading that exists',
+    (_code, slug) => {
+      const headings = readFileSync(join(repoRoot, 'docs/troubleshooting.md'), 'utf8')
+        .split('\n')
+        .filter((line) => line.startsWith('#'))
+        .map((line) => anchor(line.replace(/^#+ /, '')));
+      expect(headings).toContain(slug);
+    },
+  );
 });

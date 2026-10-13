@@ -7,6 +7,17 @@ import { STATUS_NAMES } from './status.ts';
 export const TROUBLESHOOTING_URL =
   'https://github.com/oaknational/oak-agent-skills/blob/main/docs/troubleshooting.md';
 
+// The headings in docs/troubleshooting.md that explain each exit code. A test keeps them in step.
+// cspell:ignore didnt
+export const TROUBLESHOOTING_ANCHORS: Record<number, string> = {
+  1: 'exit-code-1-a-synced-skill-was-edited',
+  2: 'exit-code-2-the-skills-are-out-of-date',
+  3: 'exit-code-3-edited-and-out-of-date',
+  4: 'exit-code-4-something-oak-skills-didnt-write',
+  5: 'exit-code-5-a-configuration-problem',
+  6: 'exit-code-6-agentsmd-is-too-large',
+};
+
 function editedSkills(paths: readonly string[]): string[] {
   const names = paths.map(
     (path) => /^\.(?:agents|claude)\/skills\/([^/ ]+)/.exec(path)?.[1] ?? path,
@@ -66,7 +77,7 @@ export const check: Command = {
     output.err(
       `oak-skills check failed: ${String(STATUS_NAMES[exitCode])} (exit code ${String(exitCode)}).`,
     );
-    output.err(`See ${TROUBLESHOOTING_URL}#exit-code-${String(exitCode)}`);
+    output.err(`See ${TROUBLESHOOTING_URL}#${String(TROUBLESHOOTING_ANCHORS[exitCode])}`);
     return exitCode;
   },
 };

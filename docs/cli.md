@@ -80,3 +80,51 @@ It never touches anything else:
 | 5    | A configuration problem: unknown names in `oakSkills`, no `oakSkills` settings, no root `package.json`, or not inside a git repository. Nothing was changed. |
 | 64   | The command line itself was wrong, such as an unknown option.                                                                                                |
 | 70   | A bug in `oak-skills`. Please report it in a `skill-feedback` issue in the central repository.                                                               |
+
+## Checking the skills
+
+The synced skills are read-only in a consuming repository: the lockfile pins the package, but agents read the committed copies, so a checksum check protects them. Two commands report on them without changing anything.
+
+### oak-skills status
+
+`pnpm exec oak-skills status` reports the state of every synced skill: which are clean, which files were edited, whether the skills are out of date, and anything in the skill folders that `oak-skills` didn't write. Add `--json` for machine-readable output, for scripts and agents.
+
+### oak-skills check
+
+`pnpm exec oak-skills check` uses the same logic for CI. It fails on anything that isn't clean, names the fix, and links to the [troubleshooting guide](troubleshooting.md). It also checks the size of the repository's `AGENTS.md` files: it warns when one passes about 100 lines, and fails when the files on any path from the root to a folder together pass 32 KiB, because Codex counts them against one budget.
+
+`check` needs the package installed, because that's how it runs, but no network access: it compares the manifest with its own version.
+
+### Running check in CI
+
+`oak-skills init` adds `.github/workflows/oak-skills-check.yml`, which installs dependencies and runs `check` on every pull request. Make it a required check, so an edited or out-of-date skill can't merge.
+
+In a large repository, you can avoid a second install by adding `check` as a step to a job in your existing CI that has already installed dependencies:
+
+```yaml
+- name: Check the synced agent skills
+  run: pnpm exec oak-skills check
+```
+
+You can also add `pnpm exec oak-skills check` to your own pre-commit hook for earlier warning. `oak-skills init` doesn't install hooks.
+
+## Exit codes
+
+`status` and `check` use the same exit codes. When several apply, the highest wins: a configuration problem makes the other results unreliable, so fix it first. The [troubleshooting guide](troubleshooting.md#exit-codes) explains each one.
+
+| Code | Meaning                                                                                                                             | What to do                                                                             |
+| ---- | ----------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| 0    | Clean                                                                                                                               | Nothing                                                                                |
+| 1    | A synced skill was edited locally                                                                                                   | Run `oak-skills promote`, or revert the edit                                           |
+| 2    | Out of date: the skills were synced from a different version from the one installed, or `oakSkills` has changed since the last sync | Run `oak-skills sync`                                                                  |
+| 3    | Both: edited locally, and out of date                                                                                               | Promote or revert, then sync                                                           |
+| 4    | Something in `.agents/skills/` or `.claude/skills/` that `oak-skills` didn't write                                                  | Move a skill into the central repository with `oak-skills promote --new`, or remove it |
+| 5    | A configuration problem, such as an unknown profile, skill or bundle in `oakSkills`                                                 | Fix `package.json`                                                                     |
+| 6    | `check` only: the `AGENTS.md` files on one path together pass 32 KiB                                                                | Shorten them, and move how-to guidance into skills                                     |
+
+Every command also uses these:
+
+| Code | Meaning                                                                                        |
+| ---- | ---------------------------------------------------------------------------------------------- |
+| 64   | The command line itself was wrong, such as an unknown option                                   |
+| 70   | A bug in `oak-skills`. Please report it in a `skill-feedback` issue in the central repository. |
