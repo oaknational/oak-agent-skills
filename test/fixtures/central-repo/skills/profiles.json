@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "profiles": {
+    "base": {
+      "description": "Skills for every repository",
+      "skills": ["oak-example"]
+    }
+  }
+}

@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { run } from '../../src/run.ts';
 import { capture } from '../helpers/capture.ts';
 import { createTempRepo, type TempRepo } from '../helpers/temp-repo.ts';
-import { skillText, writeTree } from '../helpers/tree.ts';
+import { removeTree, skillText, writeTree } from '../helpers/tree.ts';
 
 const repos: TempRepo[] = [];
 afterEach(() => {
@@ -45,10 +45,34 @@ describe('oak-skills validate', () => {
       [
         'skills/central/code-review: is a shared skill, so its name must start with "oak-"',
         'skills/central/oak-example/SKILL.md:10: uses the !`command` syntax, which Claude Code runs as a shell command before the skill reaches the model',
+        "skills/profiles.json: doesn't list code-review in any profile, so no repository could receive it",
         '',
-        'Found 2 problems in 2 skills.',
+        'Found 3 problems in 2 skills.',
       ].join('\n'),
     );
+  });
+
+  it('requires a CODEOWNERS line for each repository bundle', async () => {
+    const repo = createTempRepo('central-repo');
+    repos.push(repo);
+    writeTree(repo.root, {
+      'skills/repos/owa/owa-routing/SKILL.md': skillText({ name: 'owa-routing' }),
+      'skills/repos/not-a-code/x/SKILL.md': skillText({ name: 'x' }),
+    });
+    const missing = await validateIn(repo.root);
+    expect(missing.code).toBe(1);
+    expect(missing.err).toContain('.github/CODEOWNERS: has no line for /skills/repos/owa/.');
+
+    writeTree(repo.root, {
+      '.github/CODEOWNERS':
+        '* @oaknational/skills-maintainers\n/skills/repos/owa/ @oaknational/owa-team @oaknational/skills-maintainers\n',
+    });
+    removeTree(join(repo.root, 'skills/repos/not-a-code'));
+    expect(await validateIn(repo.root)).toEqual({
+      code: 0,
+      out: 'Checked 2 skills: no problems.',
+      err: '',
+    });
   });
 
   it('says "1 problem" for a single problem', async () => {
