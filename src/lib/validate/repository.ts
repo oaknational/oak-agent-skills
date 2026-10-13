@@ -2,6 +2,8 @@ import { existsSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { BUNDLE_CODE, findSkills } from './central-repo.ts';
 import { checkCodeowners } from './codeowners.ts';
+import { checkDeprecations } from './deprecation.ts';
+import { checkDescriptionBudget } from './description-budget.ts';
 import type { DevDependencies } from './dev-dependencies.ts';
 import type { Problem } from './problem.ts';
 import { checkProfiles, type Profiles } from './profiles.ts';
@@ -43,6 +45,8 @@ export function validateRepository(
       ...found.problems,
       ...skills.flatMap((skill) => skill.problems),
       ...profiles.problems,
+      ...checkDeprecations(skills),
+      ...checkDescriptionBudget(skills),
       ...checkUpdatedDates(root, skills, deps, env),
       ...checkCodeowners(root, bundleCodes(root)),
     ],
