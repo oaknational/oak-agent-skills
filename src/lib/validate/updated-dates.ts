@@ -79,8 +79,13 @@ export function checkUpdatedDates(
   skills: readonly CheckedSkill[],
   deps: Pick<DevDependencies, 'yaml'>,
   env: NodeJS.ProcessEnv = process.env,
+  now: Date = new Date(),
 ): Problem[] {
   const comparison = findComparison(root, env);
+  // A second change on the same day can't change the date again, and needn't: it's already
+  // right. Accept the local date as well as UTC, so a change made just after midnight passes.
+  const local = new Date(now.getTime() - now.getTimezoneOffset() * 60_000);
+  const today = new Set([now.toISOString().slice(0, 10), local.toISOString().slice(0, 10)]);
   if (comparison === undefined) return [];
   const problems: Problem[] = [];
   for (const { location, frontmatter } of skills) {
@@ -89,7 +94,8 @@ export function checkUpdatedDates(
     if (!changed) continue;
     // A skill that didn't exist before can have any date.
     const before = updatedAt(root, comparison.ref, location.path, deps);
-    if (before !== undefined && before === frontmatter.metadata.updated) {
+    const { updated } = frontmatter.metadata;
+    if (before !== undefined && before === updated && !today.has(updated)) {
       problems.push({
         file: `${location.path}/SKILL.md`,
         message: `has changed since ${comparison.description}, but metadata.updated is still ${before}. Set it to today's date.`,

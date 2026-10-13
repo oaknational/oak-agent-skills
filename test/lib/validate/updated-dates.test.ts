@@ -1,7 +1,7 @@
 import { execFileSync } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { afterEach, beforeAll, describe, expect, it } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { OakSkillsError } from '../../../src/lib/errors.ts';
 import {
   loadDevDependencies,
@@ -38,9 +38,9 @@ function central(): TempRepo {
 const SKILL = 'skills/central/oak-example/SKILL.md';
 const GUIDE = 'skills/central/oak-example/references/guide.md';
 
-function dateProblems(root: string, env: NodeJS.ProcessEnv = {}): string[] {
+function dateProblems(root: string, env: NodeJS.ProcessEnv = {}, now?: Date): string[] {
   const { skills } = validateRepository(root, deps, validators, {});
-  return checkUpdatedDates(root, skills, deps, env).map((p) => `${p.file}: ${p.message}`);
+  return checkUpdatedDates(root, skills, deps, env, now).map((p) => `${p.file}: ${p.message}`);
 }
 
 function setUpdated(root: string, date: string): void {
@@ -49,7 +49,7 @@ function setUpdated(root: string, date: string): void {
 }
 
 const unchangedMessage = (since: string) =>
-  `${SKILL}: has changed since ${since}, but metadata.updated is still 2026-10-13. Set it to today's date.`;
+  `${SKILL}: has changed since ${since}, but metadata.updated is still 2025-06-01. Set it to today's date.`;
 
 describe('checkUpdatedDates, against the last commit', () => {
   it('passes when no skill has changed', () => {
@@ -125,6 +125,37 @@ describe('checkUpdatedDates, against the last commit', () => {
       [SKILL]: skillText(),
     });
     expect(dateProblems(root)).toEqual([]);
+  });
+});
+
+describe('checkUpdatedDates, on the same day', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  function committedOn(date: string): TempRepo {
+    const repo = central();
+    setUpdated(repo.root, date);
+    repo.git('commit', '--quiet', '--all', '--message', 'chore: date it');
+    writeFileSync(join(repo.root, GUIDE), '# Guide\n\nA second change.\n');
+    return repo;
+  }
+
+  it("passes a second change when the date is already today's", () => {
+    const repo = committedOn('2026-10-20');
+    expect(dateProblems(repo.root, {}, new Date('2026-10-20T12:00:00Z'))).toEqual([]);
+  });
+
+  it('fails the same change on a later day', () => {
+    const repo = committedOn('2026-10-20');
+    expect(dateProblems(repo.root, {}, new Date('2026-10-21T12:00:00Z'))).toHaveLength(1);
+  });
+
+  it('accepts the local date just after midnight, when UTC is still the day before', () => {
+    vi.stubEnv('TZ', 'Europe/London');
+    const repo = committedOn('2026-10-14');
+    // 23:30 UTC on 13 October is 00:30 on 14 October in London, during British Summer Time.
+    expect(dateProblems(repo.root, {}, new Date('2026-10-13T23:30:00Z'))).toEqual([]);
   });
 });
 

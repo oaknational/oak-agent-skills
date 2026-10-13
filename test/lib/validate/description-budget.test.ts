@@ -17,7 +17,7 @@ function skill(name: string, descriptionLength: number, bundle?: string): Checke
       name,
       description: 'x'.repeat(descriptionLength),
       license: 'MIT',
-      metadata: { owner: '@oaknational/skills-maintainers', updated: '2026-10-13' },
+      metadata: { owner: '@oaknational/skills-maintainers', updated: '2025-06-01' },
     },
     problems: [],
   };
