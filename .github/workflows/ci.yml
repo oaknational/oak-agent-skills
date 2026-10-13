@@ -160,11 +160,12 @@ jobs:
         with:
           enable-cache: false
       - run: .github/scripts/install-tool.sh actionlint
-      - run: actionlint
+      # The templates init writes into consuming repositories are checked too.
+      - run: actionlint .github/workflows/*.yml templates/workflows/*.yml
       - name: Run zizmor, including its online audits
         env:
           GH_TOKEN: ${{ github.token }}
-        run: uvx zizmor@1.30.1 .github
+        run: uvx zizmor@1.30.1 .github templates/workflows/*.yml
 
   package:
     name: Package contents

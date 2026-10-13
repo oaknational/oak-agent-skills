@@ -1,7 +1,9 @@
 agentsmd
 changesets
 commitlint
+cooldowns
 corepack
+esac
 esbuild
 frontmatter
 gitleaks
@@ -9,6 +11,7 @@ lychee
 markdownlint
 NOSYSTEM
 oaknational
+pipefail
 publint
 SDLC
 thenational

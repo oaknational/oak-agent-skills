@@ -1,0 +1,18 @@
+# Written by oak-skills init. Dependabot checks npm dependencies daily, and puts the agent skills
+# package in a group of its own, listed first, so its updates are never bundled with others.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: daily
+    groups:
+      oak-agent-skills:
+        patterns:
+          - '@oaknational/oak-agent-skills'
+    # If you add a cooldown, exempt the skills package so new skills aren't held back.
+    # A cooldown block applies three days to everything else unless it sets default-days.
+    # cooldown:
+    #   default-days: 7
+    #   exclude:
+    #     - '@oaknational/oak-agent-skills'
