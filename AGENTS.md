@@ -20,6 +20,7 @@ While the first iteration is being built, agents follow `docs/plans/agent-build-
 - Internal links and anchors, offline: `pnpm links` (needs lychee installed)
 - Secrets and personal data across the whole git history: `pnpm secrets` (needs gitleaks installed). Rules are in `.gitleaks.toml`.
 - Package contents: `pnpm pack:check` (publint, then `npm pack --dry-run`)
+- The publish workflow's package gate: `pnpm publish:gate` builds, packs with pnpm and checks the tarball (`scripts/check-package.ts`). It fails until `todo-engineers-team` is replaced.
 - Workflow files, including those in `templates/workflows/`: `pnpm workflows` (needs actionlint and zizmor installed). For a stricter pass, run `zizmor --offline --persona=auditor .github`.
 - Skills: `pnpm validate` checks every skill against our rules. Given paths, it reports only the skills that hold them, as the pre-commit hook does.
 - README skills table: `pnpm readme:skills` regenerates it from the skills and `skills/profiles.json`. `validate` fails if it's out of date.
