@@ -37,6 +37,7 @@ While the first iteration is being built, agents follow `docs/plans/agent-build-
 - `.github/workflows/pr-title.yml`: checks that a PR title is a Conventional Commit, because squash merges turn it into the commit on `main`.
 - `.github/workflows/skill-scan.yml`: Cisco skill-scanner on changed skills in PRs and every skill weekly, failing on high severity. Reviewed false positives go in `.github/skill-scanner-policy.yaml`.
 - `.github/workflows/coverage-matrix.yml`: weekly, runs `scripts/coverage-matrix.ts` to list the repositories using the package, their versions and settings, and flags to look at.
+- `.github/workflows/link-check.yml`: weekly online check of every link, including external ones. Each scheduled workflow opens an issue if it fails.
 - `.github/CODEOWNERS`: `skills-maintainers` on every line. `todo-engineers-team` is a placeholder for the all-engineers team, and must be replaced before the first release.
 - `.github/pull_request_template.md`: used for every PR, including those `oak-skills promote` opens.
 - `test/`: unit, integration and end-to-end tests. `test/helpers/temp-repo.ts` builds temporary git repositories from `test/fixtures/`.
