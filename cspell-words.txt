@@ -1,3 +1,4 @@
+agentsmd
 changesets
 commitlint
 corepack
