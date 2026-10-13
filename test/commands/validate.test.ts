@@ -94,6 +94,44 @@ describe('oak-skills validate', () => {
     expect((await validateIn(repo.root)).err).toContain('Found 1 problem in 1 skill.');
   });
 
+  it('reports only the given skills, plus problems that belong to the whole repository', async () => {
+    const repo = createTempRepo('central-repo');
+    repos.push(repo);
+    writeTree(repo.root, {
+      'skills/central/oak-bad/SKILL.md': skillText({ name: 'oak-bad', body: 'Run !`ls`.' }),
+      'skills/central/oak-other/SKILL.md': skillText({ name: 'oak-other', body: 'Run !`pwd`.' }),
+    });
+    const captured = capture();
+    const code = await run(
+      [
+        'validate',
+        join(repo.root, 'skills/central/oak-bad/SKILL.md'),
+        'skills/central/oak-example',
+        'README.md',
+      ],
+      captured.output,
+      { cwd: repo.root },
+    );
+    expect(code).toBe(1);
+    expect(captured.err()).toContain(
+      'skills/central/oak-bad/SKILL.md:10: uses the !`command` syntax',
+    );
+    expect(captured.err()).not.toContain('oak-other/SKILL.md');
+    expect(captured.err()).toContain("skills/profiles.json: doesn't list oak-other in any profile");
+    expect(captured.err()).toContain('README.md: has an out-of-date skills table.');
+  });
+
+  it('passes when the given paths hold no problems', async () => {
+    const repo = createTempRepo('central-repo');
+    repos.push(repo);
+    const captured = capture();
+    expect(
+      await run(['validate', 'skills/central/oak-example/SKILL.md'], captured.output, {
+        cwd: repo.root,
+      }),
+    ).toBe(0);
+  });
+
   it('refuses to run outside the central repository', async () => {
     const repo = createTempRepo('single-package');
     repos.push(repo);

@@ -41,7 +41,8 @@
     "changeset:status": "changeset status --since=main",
     "pack:check": "pnpm build && publint --strict && npm pack --dry-run --ignore-scripts",
     "workflows": "actionlint && zizmor --offline .github",
-    "readme:skills": "node scripts/readme-skills-table.ts"
+    "readme:skills": "node scripts/readme-skills-table.ts",
+    "validate": "node src/cli.ts validate"
   },
   "devDependencies": {
     "@changesets/cli": "3.0.3",

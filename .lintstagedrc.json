@@ -12,5 +12,6 @@
   "*.{json,jsonc,yml,yaml}": [
     "prettier --write --ignore-unknown",
     "cspell --no-progress --no-must-find-files"
-  ]
+  ],
+  "{skills/**,README.md,.github/CODEOWNERS}": ["node src/cli.ts validate"]
 }
