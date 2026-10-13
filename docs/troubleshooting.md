@@ -77,6 +77,23 @@ The `oak-skills-sync.yml` workflow only runs on a pull request that Dependabot o
 
 To sync by hand instead, check out the pull request's branch, run `pnpm install` and `pnpm exec oak-skills sync`, then commit the result with `[dependabot skip]` in the message, so Dependabot can still rebase it.
 
+### oak-skills promote stopped
+
+`promote` checks everything it needs before it changes anything, and says what to fix:
+
+| Message                                                   | What to do                                                                                                                                                                          |
+| --------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| gh is not installed, or not signed in                     | Install the [GitHub CLI](https://cli.github.com/), then run `gh auth login`.                                                                                                        |
+| You don't have write access                               | Ask the skills maintainers for access, or raise a `skill-feedback` issue describing the change.                                                                                     |
+| The skills are out of date                                | The installed version changed after the last sync, so `promote` can't tell your edit apart from the update. Check out the previous lockfile, reinstall, promote, then update again. |
+| Something oak-skills didn't write is in the skill folders | Promote that draft first with `--new`, or remove it.                                                                                                                                |
+| The skill hasn't been edited                              | There's nothing to promote: the copy matches the synced one.                                                                                                                        |
+| No release tag                                            | The central repository has no `v<version>` tag for your installed version. Tell the skills maintainers.                                                                             |
+| The change couldn't be applied                            | The skill was removed or moved on `main` since your version. Raise a `skill-feedback` issue describing the change instead.                                                          |
+| The title would be too long                               | Give a shorter reason with `--message`.                                                                                                                                             |
+
+If the merge conflicted, `promote` still opens the pull request, as a draft with the conflict marked, and restores your copy. Resolve the conflict in the pull request.
+
 ### Skills are listed twice in Cursor or Copilot
 
 This is expected. Cursor and GitHub Copilot read both `.agents/skills/` and `.claude/skills/`, and the links in `.claude/skills/` point at the same files, so each skill appears twice. Both entries are the same skill. Claude Code reads only `.claude/skills/` and Codex only `.agents/skills/`, so both folders are needed.

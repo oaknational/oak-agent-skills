@@ -153,6 +153,57 @@ In a large repository, you can avoid a second install by adding `check` as a ste
 
 You can also add `pnpm exec oak-skills check` to your own pre-commit hook for earlier warning. `oak-skills init` doesn't install hooks.
 
+## Editing a skill
+
+Synced skills are read-only here, but improving them is welcome: a local edit often means the central skill is wrong or incomplete. `oak-skills promote` turns your edit into a pull request against the central repository, attributed to your repository, so the improvement reaches everyone.
+
+1. Edit the skill in `.agents/skills/<name>/`, and try it out.
+2. Preview the change: `pnpm exec oak-skills promote <name> --dry-run`.
+3. Promote it: `pnpm exec oak-skills promote <name>`.
+
+`promote` asks why you made the change and which version bump it needs, or takes them from `--message` and `--bump`. Then it:
+
+1. clones the central repository with your own `gh` login, and creates a branch from `main`;
+2. applies your change, taken against the release your copy came from, with a three-way merge, so it still applies if the skill has changed since;
+3. sets the skill's `metadata.updated` to today, and adds a changeset;
+4. opens a pull request with a [Conventional Commit](https://www.conventionalcommits.org/) title and the template filled in, including an `Originating-Repo:` line naming your repository. If the merge conflicted, the pull request is a draft with the conflict marked, for a reviewer to resolve;
+5. restores the synced copy here with `oak-skills sync`, so your own pull request passes `oak-skills check`.
+
+Your improvement arrives with the next release, through the usual Dependabot pull request.
+
+### Proposing a new skill
+
+To propose a skill for your repository's bundle, draft it in `.agents/skills/<name>/` or `.claude/skills/<name>/`, then run `pnpm exec oak-skills promote <name> --new`. The name must start with your repository's code, such as `owa-`, and `oakSkills` must name the bundle. `promote` proposes the whole folder for `skills/repos/<code>/`, then removes the local draft. Follow the [guide to contributing a skill](contributing-a-skill.md) when you write it.
+
+### Choosing the version bump
+
+| Bump    | When                                                                                      |
+| ------- | ----------------------------------------------------------------------------------------- |
+| `patch` | Wording changes that don't change when the skill fires. The default for an edit.          |
+| `minor` | A new skill, or a change to when a repository's own skill fires. The default for `--new`. |
+| `major` | A shared skill removed or renamed, or a change to what its description fires on           |
+
+Until version 1.0.0, a major change is recorded as minor in the changeset, because Changesets would otherwise release 1.0.0, but its title still marks it as breaking with `!`.
+
+### What promote needs
+
+- `git`, and the GitHub CLI `gh` signed in with `gh auth login`.
+- Write access to the central repository, which every Oak engineer has. If you don't work at Oak, raise a `skill-feedback` issue there instead.
+- Skills that are otherwise clean and up to date: `oak-skills status` reporting only local edits. If the installed version has changed since the last sync, promote from the version the skills came from first, because syncing would replace your edit.
+
+### Options
+
+| Option                         | What it does                                                                                                                             |
+| ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `--new`                        | Proposes a drafted skill for your repository's bundle, rather than an edit to a synced one.                                              |
+| `--bump <patch\|minor\|major>` | The version bump the change needs, instead of being asked.                                                                               |
+| `--message <text>`             | Why you made the change, used for the title, the changeset and the pull request. Without a terminal, such as in a script, it's required. |
+| `--dry-run`                    | Prints the change and what `promote` would do, without cloning, opening or changing anything.                                            |
+
+### Personal skills
+
+Skills you want only for yourself belong in `~/.claude/skills/` or `~/.agents/skills/` on your own machine, not in a repository. Don't give them the `oak-` prefix: in Claude Code, a personal skill overrides a project skill with the same name.
+
 ## Exit codes
 
 `status` and `check` use the same exit codes. When several apply, the highest wins: a configuration problem makes the other results unreliable, so fix it first. The [troubleshooting guide](troubleshooting.md#exit-codes) explains each one.

@@ -1,4 +1,6 @@
 import type { ParseArgsOptionsConfig } from 'node:util';
+import type { GitHub } from '../lib/github.ts';
+import type { Prompt } from '../lib/prompt.ts';
 
 export interface Output {
   out: (text: string) => void;
@@ -14,6 +16,10 @@ export interface CommandContext {
   cwd: string;
   // The installed package to read skills from. Only tests set it.
   packageDir?: string;
+  // Stand-ins for GitHub and the terminal. Only tests set them.
+  github?: GitHub;
+  prompt?: Prompt;
+  now?: Date;
 }
 
 export interface Command {
