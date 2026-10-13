@@ -4,7 +4,7 @@ description: An example skill for tests. Use it when a test needs a valid skill.
 license: MIT
 metadata:
   owner: '@oaknational/skills-maintainers'
-  updated: '2026-10-13'
+  updated: '2025-06-01'
 ---
 
 # Example

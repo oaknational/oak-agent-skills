@@ -9,7 +9,7 @@ function skill(name: string, description: string, deprecated?: string): CheckedS
     license: 'MIT',
     metadata: {
       owner: '@oaknational/skills-maintainers',
-      updated: '2026-10-13',
+      updated: '2025-06-01',
       ...(deprecated === undefined ? {} : { deprecated }),
     },
   };

@@ -48,7 +48,7 @@ describe('oak-skills validate', () => {
         'skills/central/code-review: is a shared skill, so its name must start with "oak-"',
         'skills/central/oak-example/SKILL.md:10: uses the !`command` syntax, which Claude Code runs as a shell command before the skill reaches the model',
         "skills/profiles.json: doesn't list code-review in any profile, so no repository could receive it",
-        "skills/central/oak-example/SKILL.md: has changed since the last commit, but metadata.updated is still 2026-10-13. Set it to today's date.",
+        "skills/central/oak-example/SKILL.md: has changed since the last commit, but metadata.updated is still 2025-06-01. Set it to today's date.",
         'README.md: has an out-of-date skills table. Run pnpm readme:skills.',
         '',
         'Found 5 problems in 2 skills.',

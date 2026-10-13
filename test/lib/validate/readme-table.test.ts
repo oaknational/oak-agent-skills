@@ -23,7 +23,7 @@ function skill(name: string, description: string, bundle?: string): CheckedSkill
       name,
       description,
       license: 'MIT',
-      metadata: { owner: '@oaknational/skills-maintainers', updated: '2026-10-13' },
+      metadata: { owner: '@oaknational/skills-maintainers', updated: '2025-06-01' },
     },
     problems: [],
   };

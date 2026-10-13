@@ -34,7 +34,7 @@ export function skillText(options: SkillOptions = {}): string {
     'license: MIT',
     ...(options.extraFrontmatter === undefined ? [] : [options.extraFrontmatter]),
     'metadata:',
-    options.metadata ?? "  owner: '@oaknational/skills-maintainers'\n  updated: '2026-10-13'",
+    options.metadata ?? "  owner: '@oaknational/skills-maintainers'\n  updated: '2025-06-01'",
     '---',
     '',
     options.body ?? `# ${name}\n\nSome guidance.`,
