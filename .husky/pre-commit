@@ -1,4 +1,5 @@
-pnpm exec lint-staged
+# One task at a time, so validate never reads a file Prettier is still writing.
+pnpm exec lint-staged --concurrent false
 
 # A skipped secret scan would let a secret into public history, so a missing gitleaks stops the commit.
 if ! command -v gitleaks >/dev/null 2>&1; then

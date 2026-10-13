@@ -13,5 +13,6 @@ SDLC
 thenational
 unstub
 vendored
+vendoring
 vitest
 zizmor
