@@ -11,13 +11,14 @@ regex = '''[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}'''
 tags = ["personal-data"]
 
   # GitHub's noreply addresses, such as a bot's commit author, aren't personal data.
-  # Neither are the domains reserved for examples.
+  # Neither are the domains reserved for examples, or Oak's shared help mailbox.
   [[rules.allowlists]]
   regexTarget = "match"
   regexes = [
     '''@users\.noreply\.github\.com$''',
     '''^noreply@github\.com$''',
     '''@example\.(?:com|org|net)$''',
+    '''^help@thenational\.academy$''',
   ]
 
 [[rules]]
