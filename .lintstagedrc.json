@@ -1,0 +1,16 @@
+{
+  "*.{ts,js,mjs}": [
+    "prettier --write --ignore-unknown",
+    "eslint --max-warnings=0 --no-warn-ignored",
+    "cspell --no-progress --no-must-find-files"
+  ],
+  "*.md": [
+    "prettier --write --ignore-unknown",
+    "markdownlint-cli2 --no-globs",
+    "cspell --no-progress --no-must-find-files"
+  ],
+  "*.{json,jsonc,yml,yaml}": [
+    "prettier --write --ignore-unknown",
+    "cspell --no-progress --no-must-find-files"
+  ]
+}
