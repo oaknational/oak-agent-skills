@@ -14,7 +14,18 @@ function readLines(yaml: string): Line[] {
     .split(/\r?\n/)
     .map((raw) => raw.replace(/(^|\s)#.*$/, '').trimEnd())
     .filter((line) => line.trim() !== '')
-    .map((line) => ({ indent: line.length - line.trimStart().length, text: line.trim() }));
+    .flatMap((line) => {
+      const indent = line.length - line.trimStart().length;
+      const text = line.trim();
+      // "- key: value" starts a mapping in a list, so the key belongs one level deeper.
+      const item = /^- ([A-Za-z0-9_-]+\s*:(?:\s.*)?)$/.exec(text);
+      return item?.[1] === undefined
+        ? [{ indent, text }]
+        : [
+            { indent, text: '-' },
+            { indent: indent + 2, text: item[1] },
+          ];
+    });
 }
 
 const unquote = (value: string) => value.trim().replace(/^(['"])(.*)\1$/, '$2');

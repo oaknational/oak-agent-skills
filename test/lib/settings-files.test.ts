@@ -115,6 +115,25 @@ updates:
     expect(readDependabot(yaml)).toMatchObject({ hasCooldown: true, cooldownExempt: false });
   });
 
+  it('reads a cooldown that starts its update entry', () => {
+    expect(
+      readDependabot(
+        'updates:\n  - cooldown:\n      exclude:\n        - "@oaknational/*"\n    package-ecosystem: npm\n',
+      ),
+    ).toMatchObject({
+      hasCooldown: true,
+      cooldownExempt: true,
+    });
+  });
+
+  it("doesn't mistake a URL in a list for a key", () => {
+    expect(
+      readReleaseAge(
+        'minimumReleaseAge: 60\nminimumReleaseAgeExclude:\n  - https://example.com/x\n',
+      ).exempt,
+    ).toBe(false);
+  });
+
   it('ignores an exclude list that is not part of a cooldown', () => {
     const yaml = `updates:\n  - ignore:\n      - dependency-name: x\n    exclude:\n      - '@oaknational/oak-agent-skills'\n    cooldown:\n      default-days: 3\n`;
     expect(readDependabot(yaml).cooldownExempt).toBe(false);

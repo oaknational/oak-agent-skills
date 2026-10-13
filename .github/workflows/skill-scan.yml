@@ -1,0 +1,95 @@
+name: Skill scan
+
+# Cisco skill-scanner's static analysers look for prompt injection, data exfiltration and
+# malicious code in the skills. Pull requests scan the skills they change; the weekly run scans
+# every skill, because the scanner's rules change too.
+on:
+  pull_request:
+    paths:
+      - 'skills/**'
+      - '.github/skill-scanner-policy.yaml'
+  schedule:
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: skill-scan-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  scan:
+    name: Scan skills
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          # Pull requests compare with the base branch to find the changed skills.
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          enable-cache: false
+      - name: Install the scanner
+        run: uv tool install cisco-ai-skill-scanner==2.2.2
+      - name: Choose the skills to scan
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          list="$RUNNER_TEMP/skills.txt"
+          if [ "$EVENT" = pull_request ]; then
+            # Every skill folder with a changed file, leaving out skills the pull request deletes.
+            git diff --name-only "origin/${BASE_REF}...HEAD" -- skills \
+              | sed -nE 's#^(skills/(central|repos/[a-z]+)/[a-z0-9-]+)/.*#\1#p' \
+              | sort -u \
+              | while read -r dir; do [ -d "$dir" ] && echo "$dir"; done > "$list"
+          else
+            find skills/central skills/repos -mindepth 2 -maxdepth 3 -name SKILL.md -exec dirname {} + 2>/dev/null \
+              | sort -u > "$list" || true
+          fi
+          echo "Skills to scan:"
+          cat "$list"
+      - name: Scan the skills, failing on high severity
+        run: |
+          list="$RUNNER_TEMP/skills.txt"
+          if [ ! -s "$list" ]; then
+            echo "No skills to scan."
+            exit 0
+          fi
+          status=0
+          while read -r dir; do
+            skill-scanner scan "$dir" --policy .github/skill-scanner-policy.yaml \
+              --fail-on-severity high --format table || status=1
+          done < "$list"
+          exit "$status"
+
+  report-failure:
+    name: Report a failed weekly scan
+    # GitHub only emails a scheduled run's failure to whoever last edited the workflow.
+    needs: scan
+    if: failure() && github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      issues: write # to open an issue for the skills maintainers
+    steps:
+      - name: Open or update an issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          title="The weekly skill scan failed"
+          body="The scheduled skill scan failed: ${RUN_URL}
+
+          @oaknational/skills-maintainers, please look at the findings in the run's log."
+          existing="$(gh issue list --repo "$REPO" --state open --search "\"${title}\" in:title" --json number --jq '.[0].number')"
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --repo "$REPO" --body "$body"
+          else
+            gh issue create --repo "$REPO" --title "$title" --body "$body"
+          fi
