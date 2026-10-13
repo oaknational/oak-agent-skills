@@ -1,0 +1,28 @@
+{
+  "version": "0.2",
+  "language": "en-GB",
+  "import": ["@cspell/dict-en-gb/cspell-ext.json"],
+  "useGitignore": true,
+  "ignorePaths": [
+    "node_modules/**",
+    "dist/**",
+    "coverage/**",
+    "pnpm-lock.yaml",
+    "docs/adr/**",
+    "docs/plans/**"
+  ],
+  "dictionaryDefinitions": [
+    {
+      "name": "project-words",
+      "path": "./cspell-words.txt",
+      "addWords": true
+    }
+  ],
+  "dictionaries": ["project-words"],
+  "languageSettings": [
+    {
+      "languageId": "markdown",
+      "dictionaries": ["!html", "!npm"]
+    }
+  ]
+}

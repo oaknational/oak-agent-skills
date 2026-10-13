@@ -1,0 +1,12 @@
+changesets
+commitlint
+corepack
+esbuild
+gitleaks
+lychee
+markdownlint
+NOSYSTEM
+oaknational
+publint
+vitest
+zizmor

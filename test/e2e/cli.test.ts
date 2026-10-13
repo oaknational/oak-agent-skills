@@ -15,8 +15,8 @@ describe('the built oak-skills command', () => {
   });
 
   it('exits 1 on an unknown command', () => {
-    const result = oakSkills('frobnicate');
+    const result = oakSkills('not-a-command');
     expect(result.status).toBe(1);
-    expect(result.stderr).toContain('Unknown command: frobnicate');
+    expect(result.stderr).toContain('Unknown command: not-a-command');
   });
 });

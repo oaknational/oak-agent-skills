@@ -20,11 +20,16 @@ function packageFile(contents: string): URL {
 
 describe('readPackageInfo', () => {
   it("reads the tool's own package.json by default", () => {
-    expect(readPackageInfo()).toEqual({ name: '@oaknational/oak-agent-skills', version: expect.any(String) });
+    const info = readPackageInfo();
+    expect(info.name).toBe('@oaknational/oak-agent-skills');
+    expect(info.version).toMatch(/^\d+\.\d+\.\d+/);
   });
 
   it('reads the name and version from a given file', () => {
-    expect(readPackageInfo(packageFile('{"name":"x","version":"1.2.3"}'))).toEqual({ name: 'x', version: '1.2.3' });
+    expect(readPackageInfo(packageFile('{"name":"x","version":"1.2.3"}'))).toEqual({
+      name: 'x',
+      version: '1.2.3',
+    });
   });
 
   it.each([

@@ -38,6 +38,8 @@ export function createTempRepo(fixture: FixtureName): TempRepo {
   return {
     root,
     git,
-    cleanup: () => rmSync(root, { recursive: true, force: true }),
+    cleanup: () => {
+      rmSync(root, { recursive: true, force: true });
+    },
   };
 }

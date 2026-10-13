@@ -23,9 +23,9 @@ describe('run', () => {
   });
 
   it('rejects an unknown command with exit code 1', () => {
-    const result = capture(['frobnicate']);
+    const result = capture(['not-a-command']);
     expect(result.code).toBe(1);
     expect(result.out).toBe('');
-    expect(result.err).toContain('Unknown command: frobnicate');
+    expect(result.err).toContain('Unknown command: not-a-command');
   });
 });

@@ -14,6 +14,10 @@ While the first iteration is being built, agents follow `docs/plans/agent-build-
 - Build the tool into `dist/`: `pnpm build`
 - Type-check: `pnpm typecheck`
 - Test, with coverage: `pnpm test`. It builds `dist/` first, because end-to-end tests run the built command.
+- Format: `pnpm format` (check only: `pnpm format:check`)
+- Lint TypeScript: `pnpm lint`. Lint Markdown: `pnpm lint:md`
+- Spelling, in British English: `pnpm spell`. Add project words to `cspell-words.txt`.
+- Internal links and anchors, offline: `pnpm links` (needs lychee installed)
 - Run the built tool: `pnpm exec oak-skills --help`
 
 ## Layout

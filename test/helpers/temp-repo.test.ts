@@ -12,7 +12,10 @@ describe('createTempRepo', () => {
   it.each<[FixtureName, string[]]>([
     ['single-package', ['package.json']],
     ['settings-only-workspace', ['package.json', 'pnpm-workspace.yaml']],
-    ['workspace', ['package.json', 'pnpm-workspace.yaml', 'apps/web/package.json', 'packages/ui/package.json']],
+    [
+      'workspace',
+      ['package.json', 'pnpm-workspace.yaml', 'apps/web/package.json', 'packages/ui/package.json'],
+    ],
   ])('builds a committed git repository from the %s fixture', (fixture, files) => {
     const repo = createTempRepo(fixture);
     repos.push(repo);
