@@ -37,6 +37,7 @@ pnpm exec oak-skills init
 | --- | --- | --- |
 | [`oak-code-review`](skills/central/oak-code-review/SKILL.md) | `base` | Reviews a code change for correctness, design, risk and test coverage, and reports findings ranked by how much they matter. Use when asked to review a pull request, a branch, a diff or staged changes, or to check work before it's merged. |
 | [`oak-pr-authoring`](skills/central/oak-pr-authoring/SKILL.md) | `base` | Writes a pull request title and description that explain why a change was made, its risk, the evidence that it works and how to roll it back. Use when opening or updating a pull request, or when asked to write or improve a PR title, description or testing instructions. |
+| [`oak-security-review`](skills/central/oak-security-review/SKILL.md) | `base` | Threat-models a code change for security, covering authorisation, input handling, secrets and dependencies, and keeping personal data and secrets out of code, logs and errors. Use when a change touches sign-in, permissions, user input, data access, APIs, configuration, logging, dependencies or CI workflows, or when asked for a security review. |
 <!-- skills-table:end -->
 <!-- prettier-ignore-end -->
 
