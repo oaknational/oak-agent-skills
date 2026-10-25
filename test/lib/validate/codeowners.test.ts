@@ -48,7 +48,7 @@ describe('checkCodeowners', () => {
       {
         file: '.github/CODEOWNERS',
         message:
-          "has no line for /skills/repos/ora/. Add one naming its repository's team and @oaknational/skills-maintainers.",
+          'has no line for /skills/repos/ora/. Add one naming @oaknational/skills-maintainers.',
       },
     ]);
   });

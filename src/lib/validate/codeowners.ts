@@ -42,7 +42,7 @@ export function checkCodeowners(root: string, bundles: readonly string[]): Probl
     if (!covered) {
       problems.push({
         file: CODEOWNERS_PATH,
-        message: `has no line for /${folder}. Add one naming its repository's team and ${MAINTAINERS}.`,
+        message: `has no line for /${folder}. Add one naming ${MAINTAINERS}.`,
       });
     }
   }
