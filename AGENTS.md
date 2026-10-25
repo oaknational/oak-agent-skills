@@ -20,7 +20,7 @@ While the first iteration is being built, agents follow `docs/plans/agent-build-
 - Internal links and anchors, offline: `pnpm links` (needs lychee installed)
 - Secrets and personal data across the whole git history: `pnpm secrets` (needs gitleaks installed). Rules are in `.gitleaks.toml`.
 - Package contents: `pnpm pack:check` (publint, then `npm pack --dry-run`)
-- The publish workflow's package gate: `pnpm publish:gate` builds, packs with pnpm and checks the tarball (`scripts/check-package.ts`). It fails until `todo-engineers-team` is replaced.
+- The publish workflow's package gate: `pnpm publish:gate` builds, packs with pnpm and checks the tarball (`scripts/check-package.ts`). It also fails if the old placeholder team `todo-engineers-team` appears anywhere.
 - Workflow files, including those in `templates/workflows/`: `pnpm workflows` (needs actionlint and zizmor installed). For a stricter pass, run `zizmor --offline --persona=auditor .github`.
 - Skills: `pnpm validate` checks every skill against our rules. Given paths, it reports only the skills that hold them, as the pre-commit hook does.
 - README skills table: `pnpm readme:skills` regenerates it from the skills and `skills/profiles.json`. `validate` fails if it's out of date.
@@ -40,7 +40,7 @@ While the first iteration is being built, agents follow `docs/plans/agent-build-
 - `.github/workflows/coverage-matrix.yml`: weekly, runs `scripts/coverage-matrix.ts` to list the repositories using the package, their versions and settings, and flags to look at.
 - `.github/workflows/link-check.yml`: weekly online check of every link, including external ones. Each scheduled workflow opens an issue if it fails.
 - `.github/workflows/publish.yml`: on pushes to `main`, opens the version PR with the GitHub App's token or, once it has merged, runs the publish gates and publishes the tarball they checked with npm trusted publishing. Only the publish job has `id-token: write`.
-- `.github/CODEOWNERS`: `skills-maintainers` on every line. `todo-engineers-team` is a placeholder for the all-engineers team, and must be replaced before the first release.
+- `.github/CODEOWNERS`: `skills-maintainers` is the only code owner, on every line, so only the skills maintainers approve changes. Any engineer can propose one.
 - `.github/pull_request_template.md`: used for every PR, including those `oak-skills promote` opens.
 - `test/`: unit, integration and end-to-end tests. `test/helpers/temp-repo.ts` builds temporary git repositories from `test/fixtures/`.
 

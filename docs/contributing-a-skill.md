@@ -163,13 +163,7 @@ The git hooks run most of these on every commit, and CI runs all of them on ever
 
 ## Review and release
 
-`.github/CODEOWNERS` decides who reviews a change:
-
-| Change                                          | Reviewers                                         |
-| ----------------------------------------------- | ------------------------------------------------- |
-| Shared skills and `skills/profiles.json`        | Any engineer, or the skills maintainers           |
-| A repository's bundle                           | That repository's team, or the skills maintainers |
-| Everything else, such as the tool and workflows | The skills maintainers                            |
+Any engineer can propose a change, but only the skills maintainers can approve one. `.github/CODEOWNERS` names `skills-maintainers` as the only code owner, for shared skills, each repository's bundle, and everything else, such as the tool and workflows. GitHub asks them to review every pull request.
 
 Pull requests are squash-merged, so give yours a [Conventional Commit](https://www.conventionalcommits.org/) title, such as `feat(oak-code-review): check for missing tests`. The pull request template asks the questions CI can't check.
 
