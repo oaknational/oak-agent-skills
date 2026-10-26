@@ -42,6 +42,8 @@ A skill's name must:
 - use only lowercase letters, digits and single hyphens, without a hyphen at the start or end;
 - be at most 64 characters.
 
+After the prefix, name the thing the skill works on, then what it does to it: `<prefix>-<object>-<verb>`, such as `oak-code-review`, `oak-pr-create` or `oak-ticket-start`. Leave out the object when the verb says it all, as in `oak-debug`. `validate` can't check this, so reviewers do.
+
 Claude Code reserves the names `synced` and `anthropic-skills`, which the prefixes already rule out.
 
 ### Frontmatter
