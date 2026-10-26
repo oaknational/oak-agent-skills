@@ -1,5 +1,6 @@
 agentsmd
 blobless
+burndown
 changesets
 commitlint
 cooldowns
@@ -17,8 +18,11 @@ pipefail
 publint
 SDLC
 thenational
+unstarted
 unstub
 vendored
 vendoring
 vitest
+workstream
+workstreams
 zizmor
