@@ -1,10 +1,10 @@
 ---
-name: oak-pr-authoring
+name: oak-pr-create
 description: Writes a pull request title and description that explain why a change was made, its risk, the evidence that it works and how to roll it back. Use when opening or updating a pull request, or when asked to write or improve a PR title, description or testing instructions.
 license: MIT
 metadata:
   owner: '@oaknational/todo-engineers-team'
-  updated: '2026-10-13'
+  updated: '2026-10-26'
 ---
 
 # Pull request authoring

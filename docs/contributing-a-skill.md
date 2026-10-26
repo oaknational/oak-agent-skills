@@ -16,7 +16,7 @@ Not everything belongs in a skill. Use this rule:
 
 ### One skill per kind of task
 
-Guidance that's always used during the same task belongs in one skill, with the detail in its `references/` folder. For example, guidance on pull request descriptions and testing instructions lives in `oak-pr-authoring/references/` rather than in two more skills.
+Guidance that's always used during the same task belongs in one skill, with the detail in its `references/` folder. For example, guidance on pull request descriptions and testing instructions lives in `oak-pr-create/references/` rather than in two more skills.
 
 Every skill adds its description to the listing agents load at the start of each session, and similar skills compete for the same prompts. Fewer, broader skills keep the listing short and stop the wrong skill firing. Before adding a skill, check whether an existing one already covers the task. If it does, add a reference file to it instead.
 
@@ -108,7 +108,7 @@ A repository receives the shared skills in the profiles it subscribes to. Profil
   "profiles": {
     "base": {
       "description": "Universal SDLC skills for every repository",
-      "skills": ["oak-code-review", "oak-pr-authoring", "oak-security-review"]
+      "skills": ["oak-code-review", "oak-pr-create", "oak-security-review"]
     }
   }
 }
