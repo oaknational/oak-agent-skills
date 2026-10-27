@@ -2,7 +2,7 @@
   "version": 2,
   "profiles": {
     "Base": {
-      "skills": ["code-review", "oak-code-review", "oak-code-review"]
+      "skills": ["security-review", "oak-security-review", "oak-security-review"]
     }
   }
 }

@@ -3,7 +3,7 @@
   "profiles": {
     "base": {
       "description": "Universal SDLC skills for every repository",
-      "skills": ["oak-code-review", "oak-pr-authoring", "oak-security-review"]
+      "skills": ["oak-pr-create", "oak-security-review", "oak-sos-draft"]
     },
     "frontend": {
       "description": "Repositories that render an interface for people",
