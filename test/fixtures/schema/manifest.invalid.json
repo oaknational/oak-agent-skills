@@ -3,10 +3,10 @@
   "package": { "name": "some-other-package", "version": "0.1.0" },
   "config": { "profiles": ["base"], "bundle": null, "include": [], "exclude": [] },
   "skills": {
-    "oak-code-review": {
+    "oak-pr-create": {
       "source": "../../etc",
       "files": { "SKILL.md": "not-a-checksum" }
     }
   },
-  "symlinks": [{ "path": ".claude/skills/oak-code-review", "target": "/etc/passwd" }]
+  "symlinks": [{ "path": ".claude/skills/oak-pr-create", "target": "/etc/passwd" }]
 }

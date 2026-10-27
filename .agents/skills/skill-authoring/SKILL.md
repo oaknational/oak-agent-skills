@@ -21,7 +21,7 @@ Write skills that agents load at the right moment and follow well, in every repo
 
 - A shared skill goes in `skills/central/<name>/`, and its name starts with `oak-`.
 - A skill for one repository goes in `skills/repos/<code>/<name>/`, and its name starts with that code and a hyphen, such as `owa-`.
-- After the prefix, name the object, then the verb: `oak-code-review`, `oak-pr-create`. Leave out the object when the verb says it all, as in `oak-debug`.
+- After the prefix, name the object, then the verb: `oak-pr-create`, `oak-security-review`. Leave out the object when the verb says it all, as in `oak-debug`.
 - Names use lowercase letters, digits and single hyphens, at most 64 characters, and match the folder name.
 
 ## 3. Write the frontmatter

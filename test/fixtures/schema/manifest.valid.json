@@ -8,8 +8,8 @@
     "exclude": ["oak-security-review"]
   },
   "skills": {
-    "oak-code-review": {
-      "source": "skills/central/oak-code-review",
+    "oak-pr-create": {
+      "source": "skills/central/oak-pr-create",
       "files": { "SKILL.md": "0000000000000000000000000000000000000000000000000000000000000000" }
     },
     "owa-routing": {
@@ -21,7 +21,10 @@
     }
   },
   "symlinks": [
-    { "path": ".claude/skills/oak-code-review", "target": "../../.agents/skills/oak-code-review" },
+    {
+      "path": ".claude/skills/oak-pr-create",
+      "target": "../../.agents/skills/oak-pr-create"
+    },
     { "path": ".claude/skills/owa-routing", "target": "../../.agents/skills/owa-routing" }
   ]
 }

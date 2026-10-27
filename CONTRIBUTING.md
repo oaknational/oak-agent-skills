@@ -31,7 +31,7 @@ To add or change a skill, follow the guide to [contributing a skill](docs/contri
 To use the `oak-skills` tool in a consuming repository, see the [guide to using oak-skills](docs/cli.md).
 
 - Work on a branch and open a pull request against `main`.
-- Give the pull request a [Conventional Commit](https://www.conventionalcommits.org/) title, such as `feat(oak-code-review): check for missing tests`. Pull requests are squash-merged, so the title becomes the commit on `main`.
+- Give the pull request a [Conventional Commit](https://www.conventionalcommits.org/) title, such as `feat(oak-security-review): check for secrets in logs`. Pull requests are squash-merged, so the title becomes the commit on `main`.
 - Add a changeset with `pnpm changeset` if you change `skills/`, `templates/` or `src/`, because those folders ship in the package.
 - Never add personal data, such as names, usernames or email addresses, or anything we wouldn't publish on our website. Published versions are public and permanent.
 - Keep code comments rare, brief and in plain English, so someone new to the project can follow them. Explain why something is done, not what the code does.

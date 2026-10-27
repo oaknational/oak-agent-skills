@@ -24,7 +24,7 @@ Every skill adds its description to the listing agents load at the start of each
 
 | Folder                        | What it holds                                                 | Name prefix                           |
 | ----------------------------- | ------------------------------------------------------------- | ------------------------------------- |
-| `skills/central/<name>/`      | Shared skills, available to every repository through profiles | `oak-`, such as `oak-code-review`     |
+| `skills/central/<name>/`      | Shared skills, available to every repository through profiles | `oak-`, such as `oak-pr-create`       |
 | `skills/repos/<code>/<name>/` | Skills for one repository, its bundle                         | The repository's code, such as `owa-` |
 
 A repository's code is the name of its folder under `skills/repos/`: two to four lowercase letters, such as `owa` for Oak-Web-Application, `oc` for oak-components and `ora` for oak-resource-adapter. A new repository folder needs a line in `.github/CODEOWNERS` naming its team and `@oaknational/skills-maintainers`.
@@ -42,7 +42,7 @@ A skill's name must:
 - use only lowercase letters, digits and single hyphens, without a hyphen at the start or end;
 - be at most 64 characters.
 
-After the prefix, name the thing the skill works on, then what it does to it: `<prefix>-<object>-<verb>`, such as `oak-code-review`, `oak-pr-create` or `oak-ticket-start`. Leave out the object when the verb says it all, as in `oak-debug`. `validate` can't check this, so reviewers do.
+After the prefix, name the thing the skill works on, then what it does to it: `<prefix>-<object>-<verb>`, such as `oak-pr-create`, `oak-security-review` or `oak-ticket-start`. Leave out the object when the verb says it all, as in `oak-debug`. `validate` can't check this, so reviewers do.
 
 Claude Code reserves the names `synced` and `anthropic-skills`, which the prefixes already rule out.
 
@@ -52,8 +52,8 @@ Use only these five fields. Agents silently ignore fields they don't recognise, 
 
 ```yaml
 ---
-name: oak-code-review
-description: Reviews a diff for correctness, design, risk and test coverage. Use when asked to review a pull request, a branch or a set of changes.
+name: oak-security-review
+description: Threat-models a code change for security. Use when a change touches sign-in, permissions, user input or secrets, or when asked for a security review.
 license: MIT
 metadata:
   owner: '@oaknational/skills-maintainers'
@@ -110,7 +110,7 @@ A repository receives the shared skills in the profiles it subscribes to. Profil
   "profiles": {
     "base": {
       "description": "Universal SDLC skills for every repository",
-      "skills": ["oak-code-review", "oak-pr-create", "oak-security-review"]
+      "skills": ["oak-pr-create", "oak-security-review", "oak-sos-draft"]
     }
   }
 }
@@ -167,6 +167,6 @@ The git hooks run most of these on every commit, and CI runs all of them on ever
 
 Any engineer can propose a change, but only the skills maintainers can approve one. `.github/CODEOWNERS` names `skills-maintainers` as the only code owner, for shared skills, each repository's bundle, and everything else, such as the tool and workflows. GitHub asks them to review every pull request.
 
-Pull requests are squash-merged, so give yours a [Conventional Commit](https://www.conventionalcommits.org/) title, such as `feat(oak-code-review): check for missing tests`. The pull request template asks the questions CI can't check.
+Pull requests are squash-merged, so give yours a [Conventional Commit](https://www.conventionalcommits.org/) title, such as `feat(oak-security-review): check for secrets in logs`. The pull request template asks the questions CI can't check.
 
 Once merged, your change is released with the next version, usually within a week. Each consuming repository then receives it through a Dependabot pull request, which its team reviews before merging.

@@ -1,4 +1,4 @@
-<!-- Title: a Conventional Commit, for example "feat(oak-code-review): check for missing tests".
+<!-- Title: a Conventional Commit, for example "feat(oak-security-review): check for secrets in logs".
 Pull requests are squash-merged, so the title becomes the commit on main. -->
 
 ## What changed and why
@@ -7,7 +7,7 @@ Pull requests are squash-merged, so the title becomes the commit on main. -->
 
 ## Skills affected
 
-<!-- For example skills/central/oak-code-review -->
+<!-- For example skills/central/oak-security-review -->
 
 ## Origin
 

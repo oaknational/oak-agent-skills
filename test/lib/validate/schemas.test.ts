@@ -18,8 +18,8 @@ const fixture = (name: string): unknown =>
   JSON.parse(readFileSync(`${fixturesDir}/schema/${name}`, 'utf8'));
 
 const validFrontmatter = {
-  name: 'oak-code-review',
-  description: 'Reviews a diff for correctness, design, risk and test coverage.',
+  name: 'oak-security-review',
+  description: 'Threat-models a code change for security.',
   license: 'MIT',
   metadata: { owner: '@oaknational/skills-maintainers', updated: '2025-06-01' },
 };
@@ -178,8 +178,8 @@ describe('manifest schema', () => {
     expect(paths).toEqual(
       expect.arrayContaining([
         '/package/name',
-        '/skills/oak-code-review/source',
-        '/skills/oak-code-review/files/SKILL.md',
+        '/skills/oak-pr-create/source',
+        '/skills/oak-pr-create/files/SKILL.md',
         '/symlinks/0/target',
       ]),
     );

@@ -11,7 +11,7 @@ export interface SkillLocation {
   name: string;
   // The repository code for a skill in skills/repos/<code>/, or undefined for a shared skill.
   bundle: string | undefined;
-  // Relative to the repository root, such as skills/central/oak-code-review.
+  // Relative to the repository root, such as skills/central/oak-security-review.
   path: string;
 }
 
