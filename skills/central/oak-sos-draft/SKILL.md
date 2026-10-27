@@ -148,8 +148,6 @@ The same shape every time: one top bullet, then the four sections in this order,
 
 ## Step 6: report back
 
-Don't write a file.
-
 1. Print the report in the format above.
 2. Below it, print an appendix that isn't part of the report:
    - the ticket IDs behind each Accomplishments bullet;
@@ -157,7 +155,7 @@ Don't write a file.
    - how each previous goal was classified: landed, partly landed or no evidence;
    - any workstream carried forward without Linear evidence, or gone quiet;
    - anything removed under the personal data rule, so the user can put it back.
-3. Offer to copy the report to the clipboard. If the user agrees, copy only the report, keeping its nesting, ready to paste into Notion: no headings, bold or blank lines inside the list, and plain text instead of code formatting.
+3. Offer to copy the report to the clipboard. If the user agrees, copy only the report, keeping its nesting, ready to paste into the squad's notes: no headings, bold or blank lines inside the list, and plain text instead of code formatting.
 
 ## Rules
 
