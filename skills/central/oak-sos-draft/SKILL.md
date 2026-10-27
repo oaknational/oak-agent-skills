@@ -4,7 +4,7 @@ description: Drafts a squad's Scrum of Scrums update from its Linear activity, c
 license: MIT
 metadata:
   owner: '@oaknational/todo-engineers-team'
-  updated: '2026-10-26'
+  updated: '2026-10-27'
 ---
 
 # Scrum of Scrums report
@@ -65,7 +65,7 @@ Read the rest of the backlog anyway. Where several tickets created this fortnigh
 Two timestamps mislead:
 
 - `completedAt` is when the ticket was closed in Linear, which can lag the merge, and tickets are often closed in batches. Don't present it as a delivery date.
-- `startedAt` is when a ticket first entered any started state, not when it entered review. `In flight since <date>` is supportable; `in review since <date>` isn't. Read `get_issue`'s state history if a bullet needs the real review date.
+- `startedAt` is when a ticket last moved from an unstarted state into a started one, not when it entered review. A ticket sent back to Todo and restarted gets a new `startedAt`, so it can postdate earlier work. `In flight since <date>` is supportable as the latest restart; `in review since <date>` isn't. Read `get_issue`'s state history if a bullet needs the first start or the real review date.
 
 ## Step 4: reconcile against the previous notes
 
@@ -76,6 +76,8 @@ Classify every bullet under the notes' "Upcoming goals and priorities":
 - **No ticket evidence:** carry it forward under Upcoming, marked `[TODO confirm]`. Much of a squad's work is never ticketed, so a missing ticket doesn't mean no progress.
 
 Then add anything shipped that no previous goal anticipated.
+
+Drop any shipped ticket whose ground the previous notes' Accomplishments already cover: tickets are often closed a day or two after the work was reported.
 
 Carry forward the notes' cross-team dependencies, marked `[TODO confirm]`: a dependency doesn't disappear because nobody mentioned it. Don't carry risks forward the same way. Squads clear a risk once it stops mattering, so offer one again only if Linear says it's still live.
 
@@ -151,6 +153,7 @@ Don't write a file.
 1. Print the report in the format above.
 2. Below it, print an appendix that isn't part of the report:
    - the ticket IDs behind each Accomplishments bullet;
+   - any shipped ticket left out because the previous notes already reported it;
    - how each previous goal was classified: landed, partly landed or no evidence;
    - any workstream carried forward without Linear evidence, or gone quiet;
    - anything removed under the personal data rule, so the user can put it back.
