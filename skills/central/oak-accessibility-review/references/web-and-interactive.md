@@ -71,10 +71,3 @@ What the code controls about video, audio and animation:
 
 - **Status messages** (e.g. "Answer saved", "3 of 10 correct") are announced to assistive tech
   without moving focus (4.1.3).
-
-## Before sign-off
-
-Test with the **keyboard only** (tab through everything), check contrast with a contrast tool, zoom
-to 200% and 400%, and run an automated checker (e.g. axe) — then `assets/accessibility-checklist.md`.
-Automated tools catch ~30–50% of issues; the keyboard pass and contrast/reading-order checks are
-manual.

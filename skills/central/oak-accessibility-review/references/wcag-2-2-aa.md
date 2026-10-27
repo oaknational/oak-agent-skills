@@ -1,7 +1,7 @@
-# WCAG 2.2 AA — what it requires for Oak's output
+# WCAG 2.2 AA: what it requires for Oak's interfaces
 
 This is a working summary of the [WCAG 2.2](https://www.w3.org/TR/WCAG22/) Level AA success
-criteria that bear on the artefacts Oak produces. It is not a substitute for the spec — when in
+criteria that bear on Oak's interfaces. It is not a substitute for the spec — when in
 doubt, read the criterion. Level AA includes everything at Level A.
 
 ## Perceivable
@@ -65,7 +65,4 @@ Oak does not target AAA across the board (some AAA criteria aren't achievable fo
 all interactions), but adopts specific AAA bars:
 
 - **1.4.6 Contrast (enhanced) — 7:1.** Oak's brand contrast target. Apply it for Oak-branded
-  artefacts.
-
-If a stakeholder asks for "AAA everywhere", push back: AA is the conformance target; AAA is applied
-selectively where it's achievable and Oak has chosen to.
+  interfaces.

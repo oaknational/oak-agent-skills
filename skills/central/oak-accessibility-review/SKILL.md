@@ -4,7 +4,7 @@ description: Builds and reviews interface code to meet WCAG 2.2 AA, with Oak's 7
 license: MIT
 metadata:
   owner: '@oaknational/todo-engineers-team'
-  updated: '2026-10-13'
+  updated: '2026-10-27'
   source: oaknational/oak-ai-plugins@2a43cf1
 ---
 
@@ -27,6 +27,7 @@ Apply the floor below to everything. Load the matching reference when you need d
 - **The criteria themselves** (what AA requires, the 2.2 additions, what Oak takes to AAA): `references/wcag-2-2-aa.md`
 - **Components, pages, forms, quizzes and embedded media** (HTML, anything clickable, video and audio players, animation): `references/web-and-interactive.md`
 - **Finishing a piece of work or a review**: run `assets/accessibility-checklist.md` before sign-off.
+- **Sources** (the WCAG 2.2 spec and supporting guidance): `references/sources.md`
 
 When reviewing, report each problem with the file and line, the WCAG criterion it fails, who it affects (for example keyboard users or screen reader users), and the fix.
 
@@ -42,10 +43,3 @@ When reviewing, report each problem with the file and line, the WCAG criterion i
 8. **Resize and reflow.** Content stays usable at 200% zoom and reflows to a single column at 320px width; never disable zoom.
 
 Automated checkers catch only some of these. Keyboard operation, focus order, reading order, contrast on real backgrounds and the meaning of alt text need a person, or you, to check by hand. When something can't fully meet a criterion, such as third-party embedded content, **note the residual limitation** rather than claiming full conformance.
-
-## References and assets
-
-- `references/wcag-2-2-aa.md`: the AA success criteria that matter for Oak's interfaces, the WCAG 2.2 additions, and the AAA items Oak adopts.
-- `references/web-and-interactive.md`: web pages, forms, quizzes, interactive content and embedded media.
-- `references/sources.md`: WCAG 2.2 and supporting standards; attribution.
-- `assets/accessibility-checklist.md`: a one-page checklist to run before sign-off.

@@ -33,4 +33,5 @@ applies. Tick only what you've actually verified — if you can't confirm an ite
 
 - [ ] Keyboard-only pass completed (web/interactive)
 - [ ] Contrast checked with a tool, not by eye
+- [ ] Automated checker run, such as axe; zoomed to 400% as well as 200%
 - [ ] Residual limitations the format can't meet are noted explicitly

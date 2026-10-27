@@ -89,7 +89,7 @@ Base:    main  (the default; name another branch if this work builds on it)
 
 Only once the branch exists, call `save_issue` with the identifier and `state: "In Progress"`. If the team has no state with that name, use its active `started` state.
 
-Skip this when the ticket is already In Progress or further along, such as In Review or Done: never move a ticket backwards. If the flow stopped before the branch was created, leave the ticket alone.
+Skip this when the ticket is already In Progress or further along, such as In Review or Done: never move a ticket backwards.
 
 Tell the user which state the ticket moved from, or that it was left as it was. If the update fails, say so plainly: the branch exists, but the board doesn't show the work has started.
 
