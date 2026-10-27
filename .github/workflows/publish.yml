@@ -10,8 +10,8 @@ name: Publish
 #   The publish job is the only one with id-token: write, and it doesn't build, test or run any
 #   package scripts: it publishes the tarball the gates checked.
 #
-# The App's Client ID and private key are Actions secrets in this repository:
-# OAK_SKILLS_APP_CLIENT_ID and OAK_SKILLS_APP_KEY.
+# The App's Client ID and private key, OAK_SKILLS_APP_CLIENT_ID and OAK_SKILLS_APP_KEY, are secrets
+# in the release environment, which only main can use, so workflows on other branches can't read them.
 on:
   push:
     branches: [main]
@@ -49,6 +49,7 @@ jobs:
     name: Open or update the version PR
     needs: mode
     if: needs.mode.outputs.mode == 'version'
+    environment: release
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
