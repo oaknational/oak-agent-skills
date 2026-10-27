@@ -1,6 +1,6 @@
 {
   "name": "@oaknational/oak-agent-skills",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Oak National Academy's shared agent skills, and the oak-skills tool that syncs them into a repository",
   "license": "MIT",
   "type": "module",
