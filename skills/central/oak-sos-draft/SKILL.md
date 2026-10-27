@@ -3,7 +3,7 @@ name: oak-sos-draft
 description: Drafts a squad's Scrum of Scrums update from its Linear activity, checked against the previous meeting's notes, covering accomplishments, upcoming goals, cross-team dependencies and risks. Use when asked to write, prepare or draft a Scrum of Scrums report, update or notes.
 license: MIT
 metadata:
-  owner: '@oaknational/todo-engineers-team'
+  owner: '@oaknational/skills-maintainers'
   updated: '2026-10-27'
 ---
 

@@ -3,7 +3,7 @@ name: oak-tdd
 description: Builds a change test first, writing a failing test for each small piece of behaviour, making it pass with the simplest code, then tidying up, and adds tests to existing code before changing it. Use when asked to use TDD or write tests first, to add or improve tests, or to fix a bug with a test that proves the fix.
 license: MIT
 metadata:
-  owner: '@oaknational/todo-engineers-team'
+  owner: '@oaknational/skills-maintainers'
   updated: '2026-10-27'
 ---
 

@@ -3,7 +3,7 @@ name: oak-ticket-start
 description: Starts work on a Linear ticket by listing the tickets ready to start, summarising the chosen one with its acceptance criteria, creating a local branch from the latest default branch, moving the ticket to In Progress, then offering to plan the work. Use when asked to start, pick up or begin a ticket or issue, or to create a branch for one.
 license: MIT
 metadata:
-  owner: '@oaknational/todo-engineers-team'
+  owner: '@oaknational/skills-maintainers'
   updated: '2026-10-27'
 ---
 

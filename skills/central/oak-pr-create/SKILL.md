@@ -3,8 +3,8 @@ name: oak-pr-create
 description: Writes a pull request title and description that explain what a change does and why, with steps to test it, then opens or updates the pull request once the user approves them. Use when opening, creating or updating a pull request, or when asked to write or improve a PR title, description or testing instructions.
 license: MIT
 metadata:
-  owner: '@oaknational/todo-engineers-team'
-  updated: '2026-10-26'
+  owner: '@oaknational/skills-maintainers'
+  updated: '2026-10-27'
 ---
 
 # Creating a pull request

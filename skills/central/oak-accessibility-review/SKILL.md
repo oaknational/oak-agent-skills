@@ -3,7 +3,7 @@ name: oak-accessibility-review
 description: Builds and reviews interface code to meet WCAG 2.2 AA, with Oak's 7:1 contrast target, including the criteria automated checkers miss. Use when building or reviewing components, pages, forms, quizzes or embedded media, or when asked whether something is accessible, to audit accessibility, or to check keyboard support, focus, contrast, alt text, labels, captions or target size.
 license: MIT
 metadata:
-  owner: '@oaknational/todo-engineers-team'
+  owner: '@oaknational/skills-maintainers'
   updated: '2026-10-27'
   source: oaknational/oak-ai-plugins@2a43cf1
 ---

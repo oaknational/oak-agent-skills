@@ -3,8 +3,8 @@ name: oak-security-review
 description: Threat-models a code change for security, covering authorisation, input handling, secrets and dependencies, and keeping personal data and secrets out of code, logs and errors. Use when a change touches sign-in, permissions, user input, data access, APIs, configuration, logging, dependencies or CI workflows, or when asked for a security review.
 license: MIT
 metadata:
-  owner: '@oaknational/todo-engineers-team'
-  updated: '2026-10-13'
+  owner: '@oaknational/skills-maintainers'
+  updated: '2026-10-27'
 ---
 
 # Security review
