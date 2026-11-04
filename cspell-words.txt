@@ -13,6 +13,7 @@ gitleaks
 lychee
 markdownlint
 NOSYSTEM
+nvmrc
 oaknational
 parameterisation
 pipefail

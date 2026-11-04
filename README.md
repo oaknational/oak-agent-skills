@@ -20,14 +20,14 @@ This package is being built and hasn't been released yet. The first release will
 
 ## Quick start
 
-In a repository you want to receive the skills, which needs Node 22 or later and pnpm 10 or 11, run this at the root:
+In a repository you want to receive the skills, which needs Node 24.22.1 or a later Node 24 and pnpm 10 or 11, run this at the root:
 
 ```sh
 pnpm add -D @oaknational/oak-agent-skills
 pnpm exec oak-skills init
 ```
 
-`init` writes the settings, workflows and starter files the repository needs, runs the first sync and lists what it can't do for you. Review and commit what it wrote. [Subscribing a repository](docs/cli.md#subscribing-a-repository) covers bundles, pnpm workspaces and the GitHub set-up.
+`init` writes the settings, workflows and starter files the repository needs, runs the first sync and lists what it can't do for you. Review and commit what it wrote. The workflows install the Node version in `package.json`'s `engines.node`, so set it if it's missing. [Subscribing a repository](docs/cli.md#subscribing-a-repository) covers bundles, pnpm workspaces and the GitHub set-up.
 
 ## Skills
 

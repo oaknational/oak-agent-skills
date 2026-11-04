@@ -37,9 +37,9 @@ jobs:
         with:
           persist-credentials: false
       - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: 24
+          node-version-file: package.json
       - run: pnpm install --frozen-lockfile --ignore-scripts
       # "version" with changesets waiting, "publish" when main's version isn't on npm, else "none".
       - id: mode
@@ -59,9 +59,9 @@ jobs:
         with:
           persist-credentials: false
       - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: 24
+          node-version-file: package.json
       - run: pnpm install --frozen-lockfile --ignore-scripts
       - name: Create a token for the GitHub App
         id: app
@@ -97,9 +97,9 @@ jobs:
           # The whole history, for the secret scan.
           fetch-depth: 0
       - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: 24
+          node-version-file: package.json
       - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         with:
           enable-cache: false
@@ -157,9 +157,9 @@ jobs:
       - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
       # Node 24 brings npm 11.5.1 or later. No registry-url: the .npmrc it writes would put a
       # token placeholder in the way of trusted publishing.
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: 24
+          node-version-file: package.json
       # Only for the Changesets command. Nothing is built, and no package scripts run.
       - run: pnpm install --frozen-lockfile --ignore-scripts
       # Publishes the checked tarball, tags the release v<version> and creates its GitHub release.

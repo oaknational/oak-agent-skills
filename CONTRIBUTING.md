@@ -18,7 +18,7 @@ Everyone taking part in this project is expected to follow the [code of conduct]
 
 ### Setting up
 
-1. Use Node 22.18 or later, and enable Corepack so that `pnpm` runs the version in `package.json`.
+1. Use Node 24.22.1 or a later Node 24, as `.nvmrc` and `engines` say, and enable Corepack so that `pnpm` runs the version in `package.json`.
 2. Install the tools the checks use, which aren't npm packages: gitleaks, lychee, actionlint and zizmor.
 3. Run `pnpm install`. It also installs the git hooks, which check each commit.
 
