@@ -10,7 +10,7 @@ While the first iteration is being built, agents follow `docs/plans/agent-build-
 
 ## Commands
 
-- Install: `pnpm install`. Developing needs Node 22.18 or later, which runs the TypeScript in `scripts/` directly; the published tool supports Node 22 and later.
+- Install: `pnpm install`. It needs Node 24.22.1 or a later Node 24, the range in `engines`, which also applies to the published tool. `engineStrict` in `pnpm-workspace.yaml` makes pnpm refuse any other version.
 - Build the tool into `dist/`: `pnpm build`
 - Type-check: `pnpm typecheck`
 - Test, with coverage: `pnpm test`. It builds `dist/` first, because end-to-end tests run the built command.
@@ -48,7 +48,7 @@ While the first iteration is being built, agents follow `docs/plans/agent-build-
 ## Rules
 
 - The package has no runtime dependencies. The tool uses only Node's built-in modules, plus `git` and `gh`.
-- Support Node 22 and later. Use pnpm, never npm or npx, except where a check names npm.
+- Support Node 24.22.1 and later Node 24 versions: earlier ones trust a compromised certificate authority. Use pnpm, never npm or npx, except where a check names npm.
 - Commit messages follow Conventional Commits.
 - Write in British English.
 - Never add personal data, such as names, usernames or email addresses. Use team handles.
