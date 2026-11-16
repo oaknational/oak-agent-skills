@@ -1,5 +1,5 @@
 import { cpSync, existsSync, lstatSync, readdirSync, readFileSync, rmSync } from 'node:fs';
-import { join } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { PACKAGE_DIR, readCatalogue } from './catalogue.ts';
 import { hashFolder } from './hash.ts';
@@ -172,12 +172,20 @@ export function hasChanges(plan: SyncPlan): boolean {
   );
 }
 
+// A second guard before deleting anything: the manifest check should already have rejected such a name.
+function skillFolder(root: string, name: string): string {
+  const dir = resolve(root, SKILLS_DIR);
+  const folder = resolve(dir, name);
+  if (dirname(folder) !== dir) throw new Error(`Refusing to change ${folder}, outside ${dir}.`);
+  return folder;
+}
+
 export function applySync(plan: SyncPlan): void {
   for (const name of plan.remove) {
-    rmSync(join(plan.root, SKILLS_DIR, name), { recursive: true, force: true });
+    rmSync(skillFolder(plan.root, name), { recursive: true, force: true });
   }
   for (const skill of [...plan.add, ...plan.update]) {
-    const target = join(plan.root, SKILLS_DIR, skill.name);
+    const target = skillFolder(plan.root, skill.name);
     rmSync(target, { recursive: true, force: true });
     cpSync(join(plan.packageDir, skill.source), target, { recursive: true });
   }

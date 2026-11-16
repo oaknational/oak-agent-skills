@@ -8,6 +8,7 @@ import {
 } from 'node:fs';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
+import { ExitCode } from '../../src/lib/exit-codes.ts';
 import { MANIFEST_PATH, readManifest } from '../../src/lib/manifest.ts';
 import { applySync, hasChanges, planSync } from '../../src/lib/sync.ts';
 import { copyPackage, setOakSkills, setPackageVersion } from '../helpers/consumer.ts';
@@ -243,5 +244,31 @@ describe('things sync did not write', () => {
     sync(root);
     expect(planSync(root, packageFixture).unmanaged).toEqual([]);
     expect(existsSync(join(root, MANIFEST_PATH))).toBe(true);
+  });
+});
+
+describe('folders outside .agents/skills/', () => {
+  it('rejects a manifest whose skill name leaves the skills folder, and deletes nothing', () => {
+    const { root } = consumer();
+    sync(root);
+    writeTree(root, { 'src/keep.ts': 'export {};\n' });
+    const manifest = JSON.parse(read(root, MANIFEST_PATH)) as { skills: Record<string, unknown> };
+    manifest.skills['../../src'] = { source: 'skills/central/oak-alpha', files: {} };
+    writeFileSync(join(root, MANIFEST_PATH), JSON.stringify(manifest));
+    expect(() => planSync(root, packageFixture)).toThrow(
+      expect.objectContaining({ exitCode: ExitCode.Configuration }),
+    );
+    expect(existsSync(join(root, 'src/keep.ts'))).toBe(true);
+  });
+
+  it('refuses to remove a folder outside the skills folder, even if a plan names one', () => {
+    const { root } = consumer();
+    const plan = planSync(root, packageFixture);
+    writeTree(root, { '.agents/outside/keep.md': 'keep\n' });
+    plan.remove.push('../outside');
+    expect(() => {
+      applySync(plan);
+    }).toThrow('Refusing to change');
+    expect(existsSync(join(root, '.agents/outside/keep.md'))).toBe(true);
   });
 });

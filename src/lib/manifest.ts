@@ -22,6 +22,9 @@ export interface Manifest {
   symlinks: { path: string; target: string }[];
 }
 
+// skillName in schema/manifest.schema.json. Sync removes folders by these names, so none may leave .agents/skills/.
+const SKILL_NAME = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
 const isObject = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
 const isStringList = (value: unknown): value is string[] =>
@@ -44,8 +47,12 @@ function isManifest(value: unknown): value is Manifest {
     isStringList(config.include) &&
     isStringList(config.exclude) &&
     isObject(skills) &&
-    Object.values(skills).every(
-      (skill) => isObject(skill) && typeof skill.source === 'string' && isStringMap(skill.files),
+    Object.entries(skills).every(
+      ([name, skill]) =>
+        SKILL_NAME.test(name) &&
+        isObject(skill) &&
+        typeof skill.source === 'string' &&
+        isStringMap(skill.files),
     ) &&
     Array.isArray(symlinks) &&
     symlinks.every(

@@ -93,6 +93,11 @@ describe('the manifest', () => {
     ],
     ['symlinks that are not a list', { ...manifest, symlinks: {} }],
     ['a symlink without a target', { ...manifest, symlinks: [{ path: '.claude/skills/x' }] }],
+    [
+      'a skill name that leaves the skills folder',
+      { ...manifest, skills: { '../../src': { source: 's', files: {} } } },
+    ],
+    ['a skill name with a slash', { ...manifest, skills: { 'a/b': { source: 's', files: {} } } }],
     ['a list instead of an object', []],
   ])('rejects a manifest with %s', (_label, bad) => {
     writeTree(root, { [MANIFEST_PATH]: JSON.stringify(bad) });
