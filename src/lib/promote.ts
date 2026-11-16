@@ -292,18 +292,17 @@ function applyEdit(clone: string, work: string, located: Located): boolean {
     );
   }
   const worktree = join(work, 'at-tag');
+  const patchFile = join(work, 'change.patch');
   git(clone, 'worktree', 'add', '--quiet', '--detach', worktree, tag);
-  let patch: string;
   try {
     rmSync(join(worktree, located.source), { recursive: true, force: true });
     cpSync(located.localFolders[0] ?? '', join(worktree, located.source), { recursive: true });
     git(worktree, 'add', '--all', '--', located.source);
-    patch = git(worktree, 'diff', '--cached', '--binary');
+    // git writes the file itself: a patch needs its trailing whitespace, which runGit trims.
+    git(worktree, 'diff', '--cached', '--binary', `--output=${patchFile}`);
   } finally {
     git(clone, 'worktree', 'remove', '--force', worktree);
   }
-  const patchFile = join(work, 'change.patch');
-  writeFileSync(patchFile, `${patch}\n`);
   const applied = spawnSync('git', ['apply', '--3way', '--index', patchFile], {
     cwd: clone,
     encoding: 'utf8',
