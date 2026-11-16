@@ -82,6 +82,14 @@ export function findSkills(root: string): { skills: SkillLocation[]; problems: P
         });
         continue;
       }
+      if (code === 'oak') {
+        problems.push({
+          file: `skills/repos/${code}`,
+          message:
+            'is not a valid repository code. "oak" is reserved: a bundle\'s skills start with its code, so they could share a name with a shared skill.',
+        });
+        continue;
+      }
       for (const name of subfolders(root, `skills/repos/${code}`, problems)) {
         skills.push({ name, bundle: code, path: `skills/repos/${code}/${name}` });
       }

@@ -27,7 +27,7 @@ Every skill adds its description to the listing agents load at the start of each
 | `skills/central/<name>/`      | Shared skills, available to every repository through profiles | `oak-`, such as `oak-pr-create`       |
 | `skills/repos/<code>/<name>/` | Skills for one repository, its bundle                         | The repository's code, such as `owa-` |
 
-A repository's code is the name of its folder under `skills/repos/`: two to four lowercase letters, such as `owa` for Oak-Web-Application, `oc` for oak-components and `ora` for oak-resource-adapter. A new repository folder needs a line in `.github/CODEOWNERS` naming its team and `@oaknational/skills-maintainers`.
+A repository's code is the name of its folder under `skills/repos/`: two to four lowercase letters, such as `owa` for Oak-Web-Application, `oc` for oak-components and `ora` for oak-resource-adapter. `oak` is reserved, because a bundle skill would then start with `oak-` and could share a shared skill's name. A new repository folder needs a line in `.github/CODEOWNERS` naming its team and `@oaknational/skills-maintainers`.
 
 This repository's own skills, such as `skill-authoring`, live in `.agents/skills/` and aren't published. They don't use the `oak-` prefix, which is only for published shared skills.
 
