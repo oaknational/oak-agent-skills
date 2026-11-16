@@ -22,8 +22,10 @@ export interface Manifest {
   symlinks: { path: string; target: string }[];
 }
 
-// skillName in schema/manifest.schema.json. Sync removes folders by these names, so none may leave .agents/skills/.
+// The patterns in schema/manifest.schema.json. Sync and promote delete folders by these values,
+// so none may lead outside .agents/skills/ or a skill folder in the central repository.
 const SKILL_NAME = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+const SKILL_SOURCE = /^skills\/(?:central|repos\/[a-z0-9]{2,4})\/[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 const isObject = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -52,6 +54,7 @@ function isManifest(value: unknown): value is Manifest {
         SKILL_NAME.test(name) &&
         isObject(skill) &&
         typeof skill.source === 'string' &&
+        SKILL_SOURCE.test(skill.source) &&
         isStringMap(skill.files),
     ) &&
     Array.isArray(symlinks) &&

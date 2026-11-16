@@ -98,6 +98,14 @@ describe('the manifest', () => {
       { ...manifest, skills: { '../../src': { source: 's', files: {} } } },
     ],
     ['a skill name with a slash', { ...manifest, skills: { 'a/b': { source: 's', files: {} } } }],
+    [
+      'a source outside the skills folders',
+      { ...manifest, skills: { x: { source: '../../..', files: {} } } },
+    ],
+    [
+      'a source that leaves a skill folder',
+      { ...manifest, skills: { x: { source: 'skills/central/../../src', files: {} } } },
+    ],
     ['a list instead of an object', []],
   ])('rejects a manifest with %s', (_label, bad) => {
     writeTree(root, { [MANIFEST_PATH]: JSON.stringify(bad) });
