@@ -2,10 +2,12 @@
 // workflow checks the tarball itself before publishing it.
 
 export const ALLOWED_FOLDERS = ['skills/', 'templates/', 'dist/'];
-// npm always includes these, whatever package.json's files lists.
-export const ALWAYS_INCLUDED = ['package.json', 'README.md', 'CHANGELOG.md', 'LICENSE'];
+// npm and pnpm always include package.json, README.md and LICENSE. pnpm doesn't add CHANGELOG.md,
+// so package.json's files lists it.
+export const ALLOWED_FILES = ['package.json', 'README.md', 'CHANGELOG.md', 'LICENSE'];
 export const REQUIRED_FILES = [
   'package.json',
+  'CHANGELOG.md',
   'dist/cli.js',
   'skills/profiles.json',
   'templates/AGENTS.md',
@@ -27,7 +29,7 @@ export function checkPackage({ files, manifest, read }: PackedPackage): string[]
   const problems: string[] = [];
   for (const file of files) {
     if (
-      !ALWAYS_INCLUDED.includes(file) &&
+      !ALLOWED_FILES.includes(file) &&
       !ALLOWED_FOLDERS.some((folder) => file.startsWith(folder))
     ) {
       problems.push(`${file} would be published, but only skills/, templates/ and dist/ ship.`);

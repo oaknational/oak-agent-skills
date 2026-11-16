@@ -12,8 +12,7 @@ export function hashFile(path: string): string {
 }
 
 // Checksums for every ordinary file in a folder, keyed by path relative to it.
+// fromEntries, because assigning to a key named __proto__ would drop the file.
 export function hashFolder(dir: string): Record<string, string> {
-  const hashes: Record<string, string> = {};
-  for (const file of listFolder(dir).files) hashes[file] = hashFile(join(dir, file));
-  return hashes;
+  return Object.fromEntries(listFolder(dir).files.map((file) => [file, hashFile(join(dir, file))]));
 }

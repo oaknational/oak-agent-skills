@@ -39,6 +39,11 @@ describe('checkPackage', () => {
     expect(checkPackage(packed({ files }))).toEqual(['dist/cli.js is missing from the package.']);
   });
 
+  it('fails a package without its changelog', () => {
+    const files = packed().files.filter((file) => file !== 'CHANGELOG.md');
+    expect(checkPackage(packed({ files }))).toEqual(['CHANGELOG.md is missing from the package.']);
+  });
+
   it.each(['preinstall', 'install', 'postinstall'])('fails a %s script', (name) => {
     const manifest = { scripts: { build: 'tsc', [name]: 'node evil.js' } };
     expect(checkPackage(packed({ manifest }))).toEqual([

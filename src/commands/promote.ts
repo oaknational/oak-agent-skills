@@ -1,6 +1,7 @@
 import { UsageError } from '../lib/errors.ts';
 import { ExitCode } from '../lib/exit-codes.ts';
 import { CENTRAL_REPO, ghCli } from '../lib/github.ts';
+import { SKILL_NAME } from '../lib/manifest.ts';
 import { terminalPrompt } from '../lib/prompt.ts';
 import { BUMPS, promote as promoteSkill, type Bump } from '../lib/promote.ts';
 import type { Command } from './command.ts';
@@ -22,10 +23,16 @@ export const promote: Command = {
     if (positionals.length !== 1) {
       throw new UsageError(
         'promote needs exactly one skill name.',
-        'For example: oak-skills promote oak-code-review',
+        'For example: oak-skills promote oak-tdd',
       );
     }
     const name = positionals[0] ?? '';
+    if (!SKILL_NAME.test(name)) {
+      throw new UsageError(
+        `"${name}" isn't a skill name. Skill names use only lowercase letters, digits and single hyphens.`,
+        'For example: oak-skills promote oak-tdd',
+      );
+    }
     const bump = values.bump;
     if (bump !== undefined && !(BUMPS as readonly unknown[]).includes(bump)) {
       throw new UsageError(`--bump must be patch, minor or major, not "${String(bump)}".`);

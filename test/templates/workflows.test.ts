@@ -208,6 +208,22 @@ describe("the sync template's push job", () => {
     },
   );
 
+  it('accepts the first links in a repository with no tracked file under .claude/', () => {
+    const repo = createTempRepo('single-package');
+    repos.push(repo);
+    writeTree(repo.root, { '.agents/skills/.oak-manifest.json': '{}' });
+    repo.git('add', '--all');
+    repo.git('commit', '--quiet', '--message', 'chore: before the first links');
+    expect(runStep('Clear the skills folder for the synced copy', repo.root).status).toBe(0);
+    goodArtifact(join(repo.root, '.agents/skills'));
+    expect(
+      runStep('Check the synced copy and recreate the Claude Code links', repo.root).status,
+    ).toBe(0);
+    const result = runStep('Confirm nothing outside the skill folders changed', repo.root);
+    expect(result.stderr).toBe('');
+    expect(result.status).toBe(0);
+  });
+
   it('rejects changes outside the skill folders', () => {
     const repo = prepare(goodArtifact);
     writeFileSync(join(repo.root, 'package.json'), '{"name":"tampered"}');

@@ -1,4 +1,4 @@
-import { spawnSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -168,6 +168,16 @@ describe('promote, 6.1: preconditions', () => {
     ).rejects.toThrow("oak-gamma isn't one of this repository's synced skills.");
   });
 
+  it.each(['constructor', 'toString', '__proto__'])(
+    'stops on %s, a name every object inherits, as a skill not synced here',
+    async (name) => {
+      const repo = consumer();
+      await expect(run(repo.root, fakeGitHub(central()), { name }).promise).rejects.toThrow(
+        `${name} isn't one of this repository's synced skills.`,
+      );
+    },
+  );
+
   it('stops when the skill has not been edited', async () => {
     const repo = consumer();
     await expect(run(repo.root, fakeGitHub(central())).promise).rejects.toThrow(
@@ -264,6 +274,44 @@ describe('promote, 6.4 to 6.7: the pull request', () => {
 
     expect(statusExitCode(computeStatus(repo.root, packageFixture))).toBe(ExitCode.Ok);
     expect(repo.git('status', '--porcelain')).toBe('');
+  });
+
+  it('applies a diff that ends on a blank line of context', async () => {
+    const pkg = copyPackage();
+    cleanups.push(() => {
+      removeTree(pkg);
+    });
+    const guide = 'skills/central/oak-alpha/references/guide.md';
+    writeFileSync(join(pkg, guide), '# Alpha guide\n\nOne.\nTwo.\nThree.\nFour.\n\nMore.\n');
+    const repo = consumer(pkg);
+    const local = join(repo.root, '.agents/skills/oak-alpha/references/guide.md');
+    writeFileSync(local, readFileSync(local, 'utf8').replace('Two.', 'Two words.'));
+    const remote = central('1.2.3', pkg);
+    const github = fakeGitHub(remote);
+    const result = await run(repo.root, github, {}, pkg).promise;
+    expect(result.conflicted).toBe(false);
+    expect(remote.read(github.pullRequests[0]?.head ?? '', guide)).toBe(
+      '# Alpha guide\n\nOne.\nTwo words.\nThree.\nFour.\n\nMore.',
+    );
+  });
+
+  it('applies a diff that adds a binary file', async () => {
+    const repo = consumer();
+    const image = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x00, 0x01, 0x02, 0xff]);
+    writeFileSync(join(repo.root, '.agents/skills/oak-alpha/references/diagram.png'), image);
+    const remote = central();
+    const github = fakeGitHub(remote);
+    const result = await run(repo.root, github, { message: 'Add a diagram' }).promise;
+    expect(result.conflicted).toBe(false);
+    const added = execFileSync(
+      'git',
+      [
+        'show',
+        `${github.pullRequests[0]?.head ?? ''}:skills/central/oak-alpha/references/diagram.png`,
+      ],
+      { cwd: remote.remote, env: isolatedGitEnv },
+    );
+    expect(added.equals(image)).toBe(true);
   });
 
   it('applies cleanly when main has changed elsewhere in the skill since the release', async () => {
@@ -581,6 +629,32 @@ describe('promote helpers', () => {
       "---\nname: x\nmetadata:\n  updated: '2026-11-02'\n---\n",
     );
     expect(setUpdatedDate('No frontmatter', '2026-11-02')).toBe('No frontmatter');
+  });
+
+  it('keeps "$" patterns in a description as they are when setting the date', () => {
+    expect(
+      setUpdatedDate(
+        "---\nname: x\ndescription: Costs $& more than $1\nmetadata:\n  updated: '2025-06-01'\n---\n",
+        '2026-11-02',
+      ),
+    ).toBe(
+      "---\nname: x\ndescription: Costs $& more than $1\nmetadata:\n  updated: '2026-11-02'\n---\n",
+    );
+  });
+
+  it('puts the reason into the template as literal text', () => {
+    const body = fillTemplate(
+      readFileSync(join(repoRoot, '.github/pull_request_template.md'), 'utf8'),
+      {
+        reason: 'Costs $& more than $1',
+        skillPath: 'skills/central/x',
+        origin: 'o/r',
+        note: '> [!NOTE]\n> Costs $& more than $1',
+      },
+    );
+    expect(body).toContain(
+      '## What changed and why\n\n> [!NOTE]\n> Costs $& more than $1\n\nCosts $& more than $1\n\n## Skills affected',
+    );
   });
 
   it("puts promote's details first when the template is unrecognised", () => {
