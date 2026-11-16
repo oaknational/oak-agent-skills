@@ -1,7 +1,7 @@
 # Oak agent skills
 
 [![Checks on main: whether CI is passing](https://img.shields.io/github/actions/workflow/status/oaknational/oak-agent-skills/ci.yml?branch=main&label=checks&color=0550ae)](https://github.com/oaknational/oak-agent-skills/actions/workflows/ci.yml)
-[![Status: pre-release, not yet published](https://img.shields.io/badge/status-pre--release-9a6700)](#status)
+[![Status: experimental, internal to Oak](https://img.shields.io/badge/status-experimental-9a6700)](#status)
 [![Code style: formatted with Prettier](https://img.shields.io/badge/code_style-Prettier-6639ba)](https://prettier.io/)
 [![Licence: MIT](https://img.shields.io/badge/licence-MIT-0550ae)](LICENSE)
 
@@ -16,7 +16,7 @@ An agent skill is a folder of instructions that a coding agent, such as Claude C
 
 ## Status
 
-This package is being built and hasn't been released yet. The first release will be 0.1.0, followed by a pilot in a few Oak repositories.
+0.1.0 is the first release. It's being piloted in a few Oak repositories, so expect changes before 1.0.0. It's an experimental internal Oak tool, and we don't support its use outside Oak.
 
 ## Quick start
 

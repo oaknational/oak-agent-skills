@@ -4,7 +4,7 @@ description: Builds and reviews interface code to meet WCAG 2.2 AA, with Oak's 7
 license: MIT
 metadata:
   owner: '@oaknational/skills-maintainers'
-  updated: '2026-10-27'
+  updated: '2026-11-16'
   source: oaknational/oak-ai-plugins@2a43cf1
 ---
 
@@ -39,7 +39,7 @@ When reviewing, report each problem with the file and line, the WCAG criterion i
 4. **Contrast.** Text meets at least **4.5:1** (3:1 for large text ≥24px/19px-bold and for UI components/graphics). **Oak's target is 7:1** where the brand applies.
 5. **Keyboard and target size.** Anything interactive works by keyboard alone, has a visible focus indicator, and gives pointer targets of at least **24×24 CSS px** (WCAG 2.2 2.5.8).
 6. **Captions, transcripts and motion.** Video players support synchronised captions and audio has a transcript; nothing autoplays with sound; meaningful animation has a text equivalent, can be paused, respects reduced motion and **must not flash** more than 3×/second.
-7. **Plain language.** Write interface text so it's as readable as the subject allows. (WCAG 3.1)
-8. **Resize and reflow.** Content stays usable at 200% zoom and reflows to a single column at 320px width; never disable zoom.
+7. **Plain language.** Write interface text so it's as readable as the subject allows. (WCAG 3.1.5, AAA: beyond the AA baseline)
+8. **Resize and reflow.** Content stays usable at 200% zoom and reflows at 320px width without scrolling in two directions; never disable zoom.
 
 Automated checkers catch only some of these. Keyboard operation, focus order, reading order, contrast on real backgrounds and the meaning of alt text need a person, or you, to check by hand. When something can't fully meet a criterion, such as third-party embedded content, **note the residual limitation** rather than claiming full conformance.
