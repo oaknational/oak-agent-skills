@@ -39,7 +39,7 @@ While the first iteration is being built, agents follow `docs/plans/agent-build-
 - `.github/workflows/skill-scan.yml`: Cisco skill-scanner on changed skills in PRs and every skill weekly, failing on high severity. Reviewed false positives go in `.github/skill-scanner-policy.yaml`.
 - `.github/workflows/coverage-matrix.yml`: weekly, runs `scripts/coverage-matrix.ts` to list the repositories using the package, their versions and settings, and flags to look at.
 - `.github/workflows/link-check.yml`: weekly online check of every link, including external ones. Each scheduled workflow opens an issue if it fails.
-- `.github/workflows/publish.yml`: on pushes to `main`, opens the version PR with the GitHub App's token or, once it has merged, runs the publish gates and publishes the tarball they checked with npm trusted publishing. Only the publish job has `id-token: write`.
+- `.github/workflows/publish.yml`: on pushes to `main`, opens the version PR with the GitHub App's token or, once it has merged, runs the publish gates and publishes the tarball they checked with npm trusted publishing. Only the publish job has `id-token: write`, and it runs in the `release` environment, which only `main` can use and npm's trusted publisher requires.
 - `.github/CODEOWNERS`: `skills-maintainers` is the only code owner, on every line, so only the skills maintainers approve changes. Any engineer can propose one.
 - `.github/pull_request_template.md`: used for every PR, including those `oak-skills promote` opens.
 - `.agents/skills/`: this repository's own local skills, such as `skill-authoring`, linked into `.claude/skills/` for Claude Code. They aren't published, and `validate` skips them.

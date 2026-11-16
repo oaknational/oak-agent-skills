@@ -241,7 +241,7 @@ Run the package gates locally with `pnpm publish:gate`. It builds, packs the pac
 
 If a gate fails, nothing is published. Fix the problem on `main`: the next push tries again. If the fix itself needs a changeset, the version pull request comes back with the next version instead.
 
-The workflow publishes with [npm trusted publishing](https://docs.npmjs.com/trusted-publishers), so there's no npm token to store or leak. Each release carries a provenance attestation linking it to the workflow run that built it. To check one:
+The workflow publishes with [npm trusted publishing](https://docs.npmjs.com/trusted-publishers), so there's no npm token to store or leak. The trusted publisher accepts only a job in the `release` environment, which only `main` can use, so a copy of the workflow on another branch can't publish. Each release carries a provenance attestation linking it to the workflow run that built it. To check one:
 
 ```sh
 npm view @oaknational/oak-agent-skills@<version> dist.attestations
