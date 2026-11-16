@@ -4,7 +4,7 @@ description: Starts work on a Linear ticket by listing the tickets ready to star
 license: MIT
 metadata:
   owner: '@oaknational/skills-maintainers'
-  updated: '2026-10-27'
+  updated: '2026-11-16'
 ---
 
 # Starting a ticket
@@ -78,7 +78,7 @@ Base:    main  (the default; name another branch if this work builds on it)
 ## Step 5: create the branch
 
 1. Run `git status --porcelain`. If there are uncommitted changes, show them and ask whether to stash them. Only if the user agrees, run `git stash push -u -m "oak-ticket-start: <TICKET-ID>"` and tell them `git stash pop` brings the changes back. If they don't agree, stop.
-2. Fetch, then branch from the fetched base, so the branch starts from the latest version rather than a stale local copy:
+2. Update the remote branches, then create the new branch from the remote copy of the base, so it's based on the latest version rather than a stale local copy:
 
    ```bash
    git fetch origin
