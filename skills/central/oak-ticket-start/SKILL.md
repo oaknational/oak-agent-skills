@@ -73,7 +73,7 @@ Base:    main  (the default; name another branch if this work builds on it)
 ```
 
 - **Branch name.** Follow the convention in `AGENTS.md` if it has one. Otherwise use `<type>/<TICKET-ID>-<slug>`: `feat`, or `fix` or `chore` when the ticket is clearly a bug fix or a chore. Make the slug from the title's distinctive words, in lowercase, joined by single hyphens, about 20 characters long, without cutting a word.
-- **Base.** The repository's default branch (`git symbolic-ref --short refs/remotes/origin/HEAD`), unless the user named another. If they name another, check it exists with `git ls-remote --exit-code --heads origin <base>` before going further.
+- **Base.** The repository's default branch, unless the user named another. To find the default, run `git symbolic-ref --short refs/remotes/origin/HEAD` and drop the `origin/` prefix from what it prints. If `origin/HEAD` isn't set, run `git ls-remote --symref origin HEAD` instead, and take the branch name after `refs/heads/`. If the user names another branch, check it exists with `git ls-remote --exit-code --heads origin <base>` before going further.
 
 ## Step 5: create the branch
 
