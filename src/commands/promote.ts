@@ -23,14 +23,14 @@ export const promote: Command = {
     if (positionals.length !== 1) {
       throw new UsageError(
         'promote needs exactly one skill name.',
-        'For example: oak-skills promote oak-code-review',
+        'For example: oak-skills promote oak-tdd',
       );
     }
     const name = positionals[0] ?? '';
     if (!SKILL_NAME.test(name)) {
       throw new UsageError(
         `"${name}" isn't a skill name. Skill names use only lowercase letters, digits and single hyphens.`,
-        'For example: oak-skills promote oak-code-review',
+        'For example: oak-skills promote oak-tdd',
       );
     }
     const bump = values.bump;

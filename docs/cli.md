@@ -226,7 +226,7 @@ How you remove a skill depends on whose it is:
 
 ## Validating skills in the central repository
 
-`oak-skills validate` checks every skill against the rules in the [guide to contributing a skill](contributing-a-skill.md). It only runs in the central repository, where `pnpm validate` runs it; anywhere else it stops with exit code 1 and suggests `oak-skills check` instead. Given paths, such as `oak-skills validate skills/central/oak-code-review/SKILL.md`, it reports only the skills that hold them, as the pre-commit hook does.
+`oak-skills validate` checks every skill against the rules in the [guide to contributing a skill](contributing-a-skill.md). It only runs in the central repository, where `pnpm validate` runs it; anywhere else it stops with exit code 1 and suggests `oak-skills check` instead. Given paths, such as `oak-skills validate skills/central/oak-tdd/SKILL.md`, it reports only the skills that hold them, as the pre-commit hook does.
 
 ## Releasing
 
