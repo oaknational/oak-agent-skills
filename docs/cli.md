@@ -54,6 +54,7 @@ When a file already exists, `init` leaves it alone and prints what to add to it 
 - **`.github/dependabot.yml`**: give `@oaknational/oak-agent-skills` a group of its own in the npm update, listed before any catch-all group, so its updates are never bundled with others.
 - **A Dependabot `cooldown`**: exempt the package in its `exclude` list, or every skills release waits out the cooldown.
 - **pnpm's `minimumReleaseAge`** in `pnpm-workspace.yaml`: add the package to `minimumReleaseAgeExclude`, for the same reason.
+- **`.prettierignore`**, which `init` doesn't check: if your Prettier check covers Markdown or JSON, add `.agents/skills/`. Otherwise Prettier rewrites the synced files, and `check` reports them as edited. Prettier doesn't follow the `.claude/skills` links, so that one line is enough.
 
 ### Before the first update arrives
 
