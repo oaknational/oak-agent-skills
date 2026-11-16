@@ -14,7 +14,16 @@ Run `pnpm exec oak-skills --help` to list the commands, `pnpm exec oak-skills <c
 
 ## Subscribing a repository
 
-To start receiving Oak's skills, add the package as a dev dependency at the repository root, then run `init`:
+To start receiving Oak's skills, first exempt the package from pnpm's release age. Add it to `minimumReleaseAgeExclude` in the root `pnpm-workspace.yaml`, creating the file if there isn't one:
+
+```yaml
+minimumReleaseAgeExclude:
+  - '@oaknational/oak-agent-skills'
+```
+
+Do this before installing. pnpm holds back versions published too recently, even when no release age is set in pnpm 11. Without the exemption, `pnpm add` installs the 0.0.0 placeholder, which has no `oak-skills` command, and `pnpm exec` refuses to run while the lockfile holds a version that's too new. If the repository already exempts `'@oaknational/*'`, there's nothing to add.
+
+Then add the package as a dev dependency at the repository root, and run `init`:
 
 ```sh
 pnpm add -D @oaknational/oak-agent-skills
@@ -22,7 +31,7 @@ pnpm exec oak-skills init --bundle <code> --dry-run
 pnpm exec oak-skills init --bundle <code>
 ```
 
-In a pnpm workspace whose `pnpm-workspace.yaml` lists packages, add `-w` to `pnpm add` so the package goes in the root `package.json`. Leave out `--bundle` if the repository has no bundle of its own skills in the central repository yet.
+In a pnpm workspace whose `pnpm-workspace.yaml` lists packages, add `--workspace-root` to `pnpm add` so the package goes in the root `package.json`. Leave out `--bundle` if the repository has no bundle of its own skills in the central repository yet.
 
 ### What init does
 
