@@ -80,7 +80,8 @@ export function setUpdatedDate(text: string, date: string): string {
   } else {
     updated = `${frontmatter}\nmetadata:\n  updated: '${date}'`;
   }
-  return text.replace(frontmatter, updated);
+  // A function, so "$" patterns in the skill's text stay as written.
+  return text.replace(frontmatter, () => updated);
 }
 
 export function pullRequestTitle(name: string, bump: Bump, reason: string): string {
@@ -95,16 +96,18 @@ export function fillTemplate(
   template: string,
   fields: { reason: string; skillPath: string; origin: string; note: string | undefined },
 ): string {
+  // Keeps the captured heading and puts the value after it. A function, so "$" patterns in the
+  // developer's text stay as written.
   const replace = (text: string, pattern: RegExp, value: string) =>
-    pattern.test(text) ? text.replace(pattern, value) : text;
+    text.replace(pattern, (_match, heading: string) => `${heading}${value}`);
   let body = template;
   body = replace(
     body,
     /(## What changed and why\s*\n\s*\n)<!--[\s\S]*?-->/,
-    `$1${fields.note === undefined ? '' : `${fields.note}\n\n`}${fields.reason}`,
+    `${fields.note === undefined ? '' : `${fields.note}\n\n`}${fields.reason}`,
   );
-  body = replace(body, /(## Skills affected\s*\n\s*\n)<!--[\s\S]*?-->/, `$1${fields.skillPath}`);
-  body = replace(body, /^Originating-Repo:.*$/m, `Originating-Repo: ${fields.origin}`);
+  body = replace(body, /(## Skills affected\s*\n\s*\n)<!--[\s\S]*?-->/, fields.skillPath);
+  body = replace(body, /^(Originating-Repo:).*$/m, ` ${fields.origin}`);
   if (!body.includes(`Originating-Repo: ${fields.origin}`)) {
     body = `${fields.note === undefined ? '' : `${fields.note}\n\n`}${fields.reason}\n\nSkill: ${fields.skillPath}\nOriginating-Repo: ${fields.origin}\n\n${template}`;
   }

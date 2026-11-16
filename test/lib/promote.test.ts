@@ -621,6 +621,32 @@ describe('promote helpers', () => {
     expect(setUpdatedDate('No frontmatter', '2026-11-02')).toBe('No frontmatter');
   });
 
+  it('keeps "$" patterns in a description as they are when setting the date', () => {
+    expect(
+      setUpdatedDate(
+        "---\nname: x\ndescription: Costs $& more than $1\nmetadata:\n  updated: '2025-06-01'\n---\n",
+        '2026-11-02',
+      ),
+    ).toBe(
+      "---\nname: x\ndescription: Costs $& more than $1\nmetadata:\n  updated: '2026-11-02'\n---\n",
+    );
+  });
+
+  it('puts the reason into the template as literal text', () => {
+    const body = fillTemplate(
+      readFileSync(join(repoRoot, '.github/pull_request_template.md'), 'utf8'),
+      {
+        reason: 'Costs $& more than $1',
+        skillPath: 'skills/central/x',
+        origin: 'o/r',
+        note: '> [!NOTE]\n> Costs $& more than $1',
+      },
+    );
+    expect(body).toContain(
+      '## What changed and why\n\n> [!NOTE]\n> Costs $& more than $1\n\nCosts $& more than $1\n\n## Skills affected',
+    );
+  });
+
   it("puts promote's details first when the template is unrecognised", () => {
     expect(
       fillTemplate('# Our own template\n', {
