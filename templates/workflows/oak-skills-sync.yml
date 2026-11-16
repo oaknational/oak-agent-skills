@@ -111,10 +111,11 @@ jobs:
             ln -s "../../.agents/skills/$name" ".claude/skills/$name"
           done
       - name: Confirm nothing outside the skill folders changed
+        # --untracked-files=all lists each new file, rather than a new .claude/ folder as one entry.
         run: |
-          if git status --porcelain | grep -vE '^.. "?\.(agents|claude)/skills/' | grep -q .; then
+          if git status --porcelain --untracked-files=all | grep -vE '^.. "?\.(agents|claude)/skills/' | grep -q .; then
             echo "The sync changed files outside .agents/skills and .claude/skills." >&2
-            git status --porcelain >&2
+            git status --porcelain --untracked-files=all >&2
             exit 1
           fi
       # Dependabot can only read organisation Dependabot secrets, which can't be scoped to an
