@@ -210,7 +210,11 @@ function locateEdit(root: string, packageDir: string, name: string): Located {
     );
   }
   const manifest = readManifest(root);
-  const skill = manifest?.skills[name];
+  // Only the manifest's own entries: a name such as constructor would find an inherited one.
+  const skill =
+    manifest !== undefined && Object.hasOwn(manifest.skills, name)
+      ? manifest.skills[name]
+      : undefined;
   if (manifest === undefined || skill === undefined) {
     throw fail(
       `${name} isn't one of this repository's synced skills.`,
@@ -248,7 +252,8 @@ function locateDraft(root: string, packageDir: string, name: string): Located {
       `Rename the folder and the name in its SKILL.md, for example to ${config.bundle}-${name.replace(/^[a-z0-9]+-/, '')}.`,
     );
   }
-  if (readManifest(root)?.skills[name] !== undefined) {
+  const synced = readManifest(root)?.skills;
+  if (synced !== undefined && Object.hasOwn(synced, name)) {
     throw fail(
       `${name} is already a synced skill. To change it, edit it and run "oak-skills promote ${name}".`,
     );

@@ -66,7 +66,7 @@ function compareWithManifest(root: string, manifest: Manifest, report: StatusRep
   }
   const managedLinks = new Set(manifest.symlinks.map((link) => link.path));
   for (const entry of entries(root, SKILLS_DIR)) {
-    if (entry !== '.oak-manifest.json' && !(entry in manifest.skills))
+    if (entry !== '.oak-manifest.json' && !Object.hasOwn(manifest.skills, entry))
       report.unmanaged.push(`${SKILLS_DIR}/${entry}`);
   }
   for (const entry of entries(root, LINKS_DIR)) {

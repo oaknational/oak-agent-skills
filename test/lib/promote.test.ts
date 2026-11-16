@@ -168,6 +168,16 @@ describe('promote, 6.1: preconditions', () => {
     ).rejects.toThrow("oak-gamma isn't one of this repository's synced skills.");
   });
 
+  it.each(['constructor', 'toString', '__proto__'])(
+    'stops on %s, a name every object inherits, as a skill not synced here',
+    async (name) => {
+      const repo = consumer();
+      await expect(run(repo.root, fakeGitHub(central()), { name }).promise).rejects.toThrow(
+        `${name} isn't one of this repository's synced skills.`,
+      );
+    },
+  );
+
   it('stops when the skill has not been edited', async () => {
     const repo = consumer();
     await expect(run(repo.root, fakeGitHub(central())).promise).rejects.toThrow(
