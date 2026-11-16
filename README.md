@@ -20,12 +20,25 @@ An agent skill is a folder of instructions that a coding agent, such as Claude C
 
 ## Quick start
 
-In a repository you want to receive the skills, which needs Node 24.22.1 or a later Node 24 and pnpm 10 or 11, run this at the root:
+In a repository you want to receive the skills, which needs Node 24.22.1 or a later Node 24 and pnpm 10 or 11:
 
-```sh
-pnpm add -D @oaknational/oak-agent-skills
-pnpm exec oak-skills init
-```
+1. Exempt the package from pnpm's release age, in `pnpm-workspace.yaml` at the root. Add it to the list if there is one, or create the file:
+
+   ```yaml
+   minimumReleaseAgeExclude:
+     - '@oaknational/oak-agent-skills'
+   ```
+
+   Do this first. Otherwise pnpm holds back a new release and installs the 0.0.0 placeholder, which has no `oak-skills` command. pnpm 11 does this even when no release age is set. If the repository already exempts `'@oaknational/*'`, skip this step.
+
+2. At the root, add the package and set it up:
+
+   ```sh
+   pnpm add -D @oaknational/oak-agent-skills
+   pnpm exec oak-skills init
+   ```
+
+   In a pnpm workspace that lists packages, add `--workspace-root` to `pnpm add`, so the package goes in the root `package.json`.
 
 `init` writes the settings, workflows and starter files the repository needs, runs the first sync and lists what it can't do for you. Review and commit what it wrote. The workflows install the Node version in `package.json`'s `engines.node`, so set it if it's missing. [Subscribing a repository](docs/cli.md#subscribing-a-repository) covers bundles, pnpm workspaces and the GitHub set-up.
 
