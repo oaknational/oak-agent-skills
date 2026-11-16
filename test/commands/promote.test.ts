@@ -66,6 +66,22 @@ describe('oak-skills promote', () => {
     expect(result.err).toContain(message);
   });
 
+  it.each(['../x', 'Oak-TDD', 'a/b'])(
+    'rejects the name "%s" with the usage exit code before doing anything',
+    async (name) => {
+      const { repo, remote } = setUp();
+      const github = fakeGitHub(remote, {
+        problem: () => {
+          throw new Error('promote went on past the name');
+        },
+      });
+      const result = await promote(repo.root, github, name, '--message', 'Improve it');
+      expect(result.code).toBe(64);
+      expect(result.err).toContain(`"${name}" isn't a skill name.`);
+      expect(github.cloned).toBe(0);
+    },
+  );
+
   it('prints the diff and the plan on a dry run', async () => {
     const { repo, remote } = setUp();
     const result = await promote(
