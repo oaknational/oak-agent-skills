@@ -268,15 +268,15 @@ A published version can't be deleted or reused. Instead:
 
 `status` and `check` use the same exit codes. When several apply, the highest wins: a configuration problem makes the other results unreliable, so fix it first. The [troubleshooting guide](troubleshooting.md#exit-codes) explains each one.
 
-| Code | Meaning                                                                                                                             | What to do                                                                             |
-| ---- | ----------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
-| 0    | Clean                                                                                                                               | Nothing                                                                                |
-| 1    | A synced skill was edited locally                                                                                                   | Run `oak-skills promote`, or revert the edit                                           |
-| 2    | Out of date: the skills were synced from a different version from the one installed, or `oakSkills` has changed since the last sync | Run `oak-skills sync`                                                                  |
-| 3    | Both: edited locally, and out of date                                                                                               | Promote or revert, then sync                                                           |
-| 4    | Something in `.agents/skills/` or `.claude/skills/` that `oak-skills` didn't write                                                  | Move a skill into the central repository with `oak-skills promote --new`, or remove it |
-| 5    | A configuration problem, such as an unknown profile, skill or bundle in `oakSkills`                                                 | Fix `package.json`                                                                     |
-| 6    | `check` only: the `AGENTS.md` files on one path together pass 32 KiB                                                                | Shorten them, and move how-to guidance into skills                                     |
+| Code | Meaning                                                                                                                                                                             | What to do                                                                             |
+| ---- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| 0    | Clean                                                                                                                                                                               | Nothing                                                                                |
+| 1    | A synced skill was edited locally                                                                                                                                                   | Run `oak-skills promote`, or revert the edit                                           |
+| 2    | Out of date: the skills were synced from a different version from the one installed, `oakSkills` has changed since the last sync, or `.agents/skills/.oak-manifest.json` is missing | Run `oak-skills sync`                                                                  |
+| 3    | Both: edited locally, and out of date                                                                                                                                               | Promote or revert, then sync                                                           |
+| 4    | Something in `.agents/skills/` or `.claude/skills/` that `oak-skills` didn't write                                                                                                  | Move a skill into the central repository with `oak-skills promote --new`, or remove it |
+| 5    | A configuration problem, such as an unknown profile, skill or bundle in `oakSkills`                                                                                                 | Fix `package.json`                                                                     |
+| 6    | `check` only: the `AGENTS.md` files on one path together pass 32 KiB                                                                                                                | Shorten them, and move how-to guidance into skills                                     |
 
 Every command also uses these:
 

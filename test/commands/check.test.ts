@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
-import { readFileSync, writeFileSync } from 'node:fs';
+import { readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { TROUBLESHOOTING_ANCHORS } from '../../src/commands/check.ts';
 import { applySync, planSync } from '../../src/lib/sync.ts';
 import { run } from '../../src/run.ts';
@@ -90,6 +90,38 @@ describe('oak-skills check', () => {
     expect(result.code).toBe(4);
     expect(result.err).toContain('Not written by oak-skills:\n  .agents/skills/oak-draft');
     expect(result.err).toContain('oak-skills promote --new <name>');
+  });
+
+  it('says to sync, with exit code 2, when the manifest is missing but the skills are there', async () => {
+    const { root } = synced();
+    rmSync(join(root, '.agents/skills/.oak-manifest.json'));
+    expect(await check(root)).toEqual({
+      code: 2,
+      out: '',
+      err: [
+        'Out of date:',
+        '  No skills have been synced yet.',
+        '  Fix: run "oak-skills sync" and commit the result.',
+        '',
+        'oak-skills check failed: out of date (exit code 2).',
+        `See ${docs}#exit-code-2-the-skills-are-out-of-date`,
+      ].join('\n'),
+    });
+  });
+
+  it('still reports what oak-skills would not write when the manifest is missing', async () => {
+    const { root } = synced();
+    rmSync(join(root, '.agents/skills/.oak-manifest.json'));
+    writeTree(root, {
+      '.agents/skills/oak-draft/SKILL.md': 'draft',
+      '.claude/skills/team-skill/SKILL.md': 'team',
+    });
+    const result = await check(root);
+    expect(result.code).toBe(4);
+    expect(result.err).toContain(
+      'Not written by oak-skills:\n  .agents/skills/oak-draft\n  .claude/skills/team-skill\n  Fix:',
+    );
+    expect(result.err).toContain('Fix: run "oak-skills sync" and commit the result.');
   });
 
   it('fails with exit code 5 on a configuration problem', async () => {
