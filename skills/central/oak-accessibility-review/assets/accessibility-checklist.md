@@ -10,9 +10,9 @@ applies. Tick only what you've actually verified — if you can't confirm an ite
 - [ ] Real lists and data tables (header cells set), not faked with styling/spacing
 - [ ] Information never conveyed by colour alone (paired with text/shape/label)
 - [ ] Text contrast ≥ 4.5:1 (≥ 3:1 large text/UI/graphics); **7:1 where Oak brand applies**
-- [ ] Link text makes sense out of context (no bare URLs or "click here")
+- [ ] Each link's purpose is clear from its text, or its text with the sentence, paragraph, list item or table cell it's in (no bare URLs or "click here")
 - [ ] Document/page language set; real selectable text (no text baked into images)
-- [ ] Usable at 200% zoom; reflows to one column at 320px; zoom not disabled
+- [ ] Usable at 200% zoom; reflows at 320px wide without scrolling in two directions; zoom not disabled
 
 ## Web and interactive (including quizzes)
 

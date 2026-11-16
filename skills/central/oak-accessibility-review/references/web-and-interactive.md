@@ -16,8 +16,9 @@ other interactive learning content. This is where the WCAG 2.2 additions bite ha
 ## Keyboard and focus
 
 - **Everything operable by keyboard**, in a logical tab order, with **no keyboard traps**.
-- **Visible focus indicator** on every interactive element (2.4.7), and the focused element is not
-  hidden behind sticky headers/overlays (**2.4.11**, new in 2.2).
+- **Visible focus indicator** on every interactive element (2.4.7), and the focused element is never
+  entirely hidden behind sticky headers/overlays (**2.4.11**, new in 2.2); keeping all of it visible
+  is 2.4.12 (AAA).
 - Provide a **skip-to-content** link for pages with repeated navigation.
 
 ## Pointer, target size, and motion
@@ -44,8 +45,8 @@ other interactive learning content. This is where the WCAG 2.2 additions bite ha
 
 - Text **4.5:1** (large text/UI/graphics **3:1**); **Oak's target is 7:1**.
 - **Non-text contrast 3:1** for control boundaries, focus rings, and meaningful graphics (1.4.11).
-- Usable at **200% zoom** and **reflows to one column at 320px** (1.4.4/1.4.10); never set
-  `user-scalable=no`.
+- Usable at **200% zoom**, and **reflows at 320px wide without scrolling in two directions**
+  (1.4.4/1.4.10); never set `user-scalable=no`.
 
 ## Embedded media and motion
 
@@ -56,7 +57,7 @@ What the code controls about video, audio and animation:
 - **Transcripts.** Audio-only media links to a transcript (1.2.1, A). For video, a transcript link is
   strongly recommended, and placed next to the player.
 - **No autoplay with sound.** If media plays automatically for more than 3 seconds, provide a pause/
-  stop/mute control (2.2.2); better, don't autoplay with sound at all.
+  stop/mute control (1.4.2, A); better, don't autoplay with sound at all.
 - **Pause controls.** Moving, looping or auto-updating content, such as carousels and looping
   animations or GIFs, can be paused, stopped or hidden (2.2.2).
 - **No flashing** more than **three times per second** (2.3.1). This is a seizure-safety criterion,
