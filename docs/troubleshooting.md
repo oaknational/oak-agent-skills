@@ -21,7 +21,7 @@ The committed skills don't match what `oak-skills sync` would write now. This ha
 
 - the installed version of `@oaknational/oak-agent-skills` differs from the version the skills were synced from, in either direction, such as after a dependency update or pinning an older version;
 - the `oakSkills` settings in `package.json` changed, adding or removing skills;
-- the repository has never been synced.
+- the repository has never been synced, or `.agents/skills/.oak-manifest.json`, the record of what was synced, is missing. Until it's synced, folders and links named after the skills it should have count as synced copies, and `sync` reports any that don't match.
 
 Run `pnpm exec oak-skills sync` and commit the result. On a Dependabot pull request, the sync workflow does this for you; if it didn't, see [the sync workflow didn't run](#the-sync-workflow-didnt-run).
 

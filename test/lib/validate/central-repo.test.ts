@@ -118,4 +118,22 @@ describe('findSkills', () => {
       { file: 'skills/repos/owa/stray.md', message: 'should be a skill folder' },
     ]);
   });
+
+  it("reserves oak, the shared skills' prefix, so it is not a repository code", () => {
+    const root = tempDir();
+    writeTree(root, {
+      'skills/central/oak-x/SKILL.md': '',
+      'skills/repos/oak/oak-x/SKILL.md': '',
+    });
+    expect(findSkills(root)).toEqual({
+      problems: [
+        {
+          file: 'skills/repos/oak',
+          message:
+            'is not a valid repository code. "oak" is reserved: a bundle\'s skills start with its code, so they could share a name with a shared skill.',
+        },
+      ],
+      skills: [{ name: 'oak-x', bundle: undefined, path: 'skills/central/oak-x' }],
+    });
+  });
 });

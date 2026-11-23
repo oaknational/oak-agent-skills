@@ -66,7 +66,7 @@ function compareWithManifest(root: string, manifest: Manifest, report: StatusRep
   }
   const managedLinks = new Set(manifest.symlinks.map((link) => link.path));
   for (const entry of entries(root, SKILLS_DIR)) {
-    if (entry !== '.oak-manifest.json' && !(entry in manifest.skills))
+    if (entry !== '.oak-manifest.json' && !Object.hasOwn(manifest.skills, entry))
       report.unmanaged.push(`${SKILLS_DIR}/${entry}`);
   }
   for (const entry of entries(root, LINKS_DIR)) {
@@ -104,8 +104,12 @@ export function computeStatus(cwd: string, packageDir: string = PACKAGE_DIR): St
 
   if (manifest === undefined) {
     report.outOfDate.push('No skills have been synced yet.');
+    // Without the manifest, entries named after wanted skills are most likely synced copies, which
+    // sync takes back or reports itself, so the fix is to sync rather than to remove them.
     for (const dir of [SKILLS_DIR, LINKS_DIR]) {
-      for (const entry of entries(root, dir)) report.unmanaged.push(`${dir}/${entry}`);
+      for (const entry of entries(root, dir)) {
+        if (wanted?.includes(entry) !== true) report.unmanaged.push(`${dir}/${entry}`);
+      }
     }
     return report;
   }

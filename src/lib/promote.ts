@@ -80,7 +80,8 @@ export function setUpdatedDate(text: string, date: string): string {
   } else {
     updated = `${frontmatter}\nmetadata:\n  updated: '${date}'`;
   }
-  return text.replace(frontmatter, updated);
+  // A function, so "$" patterns in the skill's text stay as written.
+  return text.replace(frontmatter, () => updated);
 }
 
 export function pullRequestTitle(name: string, bump: Bump, reason: string): string {
@@ -95,16 +96,18 @@ export function fillTemplate(
   template: string,
   fields: { reason: string; skillPath: string; origin: string; note: string | undefined },
 ): string {
+  // Keeps the captured heading and puts the value after it. A function, so "$" patterns in the
+  // developer's text stay as written.
   const replace = (text: string, pattern: RegExp, value: string) =>
-    pattern.test(text) ? text.replace(pattern, value) : text;
+    text.replace(pattern, (_match, heading: string) => `${heading}${value}`);
   let body = template;
   body = replace(
     body,
     /(## What changed and why\s*\n\s*\n)<!--[\s\S]*?-->/,
-    `$1${fields.note === undefined ? '' : `${fields.note}\n\n`}${fields.reason}`,
+    `${fields.note === undefined ? '' : `${fields.note}\n\n`}${fields.reason}`,
   );
-  body = replace(body, /(## Skills affected\s*\n\s*\n)<!--[\s\S]*?-->/, `$1${fields.skillPath}`);
-  body = replace(body, /^Originating-Repo:.*$/m, `Originating-Repo: ${fields.origin}`);
+  body = replace(body, /(## Skills affected\s*\n\s*\n)<!--[\s\S]*?-->/, fields.skillPath);
+  body = replace(body, /^(Originating-Repo:).*$/m, ` ${fields.origin}`);
   if (!body.includes(`Originating-Repo: ${fields.origin}`)) {
     body = `${fields.note === undefined ? '' : `${fields.note}\n\n`}${fields.reason}\n\nSkill: ${fields.skillPath}\nOriginating-Repo: ${fields.origin}\n\n${template}`;
   }
@@ -207,7 +210,11 @@ function locateEdit(root: string, packageDir: string, name: string): Located {
     );
   }
   const manifest = readManifest(root);
-  const skill = manifest?.skills[name];
+  // Only the manifest's own entries: a name such as constructor would find an inherited one.
+  const skill =
+    manifest !== undefined && Object.hasOwn(manifest.skills, name)
+      ? manifest.skills[name]
+      : undefined;
   if (manifest === undefined || skill === undefined) {
     throw fail(
       `${name} isn't one of this repository's synced skills.`,
@@ -245,7 +252,8 @@ function locateDraft(root: string, packageDir: string, name: string): Located {
       `Rename the folder and the name in its SKILL.md, for example to ${config.bundle}-${name.replace(/^[a-z0-9]+-/, '')}.`,
     );
   }
-  if (readManifest(root)?.skills[name] !== undefined) {
+  const synced = readManifest(root)?.skills;
+  if (synced !== undefined && Object.hasOwn(synced, name)) {
     throw fail(
       `${name} is already a synced skill. To change it, edit it and run "oak-skills promote ${name}".`,
     );
@@ -292,18 +300,17 @@ function applyEdit(clone: string, work: string, located: Located): boolean {
     );
   }
   const worktree = join(work, 'at-tag');
+  const patchFile = join(work, 'change.patch');
   git(clone, 'worktree', 'add', '--quiet', '--detach', worktree, tag);
-  let patch: string;
   try {
     rmSync(join(worktree, located.source), { recursive: true, force: true });
     cpSync(located.localFolders[0] ?? '', join(worktree, located.source), { recursive: true });
     git(worktree, 'add', '--all', '--', located.source);
-    patch = git(worktree, 'diff', '--cached', '--binary');
+    // git writes the file itself: a patch needs its trailing whitespace, which runGit trims.
+    git(worktree, 'diff', '--cached', '--binary', `--output=${patchFile}`);
   } finally {
     git(clone, 'worktree', 'remove', '--force', worktree);
   }
-  const patchFile = join(work, 'change.patch');
-  writeFileSync(patchFile, `${patch}\n`);
   const applied = spawnSync('git', ['apply', '--3way', '--index', patchFile], {
     cwd: clone,
     encoding: 'utf8',

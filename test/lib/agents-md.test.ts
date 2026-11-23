@@ -1,3 +1,5 @@
+import { rmSync } from 'node:fs';
+import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { checkAgentsMd, LINE_LIMIT, PATH_BYTE_LIMIT } from '../../src/lib/agents-md.ts';
 import { createTempRepo, type FixtureName, type TempRepo } from '../helpers/temp-repo.ts';
@@ -98,6 +100,17 @@ describe('checkAgentsMd', () => {
     });
     expect(checkAgentsMd(root)).toEqual({
       warnings: [expect.stringContaining('apps/web/AGENTS.md has 105 lines') as unknown],
+      failures: [],
+    });
+  });
+
+  it('skips a tracked file that has been deleted from the working tree', () => {
+    const repo = repoWith({ 'AGENTS.md': lines(LINE_LIMIT + 1), 'apps/web/AGENTS.md': lines(5) });
+    repo.git('add', '--all');
+    repo.git('commit', '--quiet', '--message', 'docs: add AGENTS.md files');
+    rmSync(join(repo.root, 'apps/web/AGENTS.md'));
+    expect(checkAgentsMd(repo.root)).toEqual({
+      warnings: [expect.stringContaining('AGENTS.md has 101 lines') as unknown],
       failures: [],
     });
   });

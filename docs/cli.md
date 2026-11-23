@@ -54,6 +54,7 @@ When a file already exists, `init` leaves it alone and prints what to add to it 
 - **`.github/dependabot.yml`**: give `@oaknational/oak-agent-skills` a group of its own in the npm update, listed before any catch-all group, so its updates are never bundled with others.
 - **A Dependabot `cooldown`**: exempt the package in its `exclude` list, or every skills release waits out the cooldown.
 - **pnpm's `minimumReleaseAge`** in `pnpm-workspace.yaml`: add the package to `minimumReleaseAgeExclude`, for the same reason.
+- **`.prettierignore`**, which `init` doesn't check: if your Prettier check covers Markdown or JSON, add `.agents/skills/`. Otherwise Prettier rewrites the synced files, and `check` reports them as edited. Prettier doesn't follow the `.claude/skills` links, so that one line is enough.
 
 ### Before the first update arrives
 
@@ -225,7 +226,7 @@ How you remove a skill depends on whose it is:
 
 ## Validating skills in the central repository
 
-`oak-skills validate` checks every skill against the rules in the [guide to contributing a skill](contributing-a-skill.md). It only runs in the central repository, where `pnpm validate` runs it; anywhere else it stops with exit code 1 and suggests `oak-skills check` instead. Given paths, such as `oak-skills validate skills/central/oak-code-review/SKILL.md`, it reports only the skills that hold them, as the pre-commit hook does.
+`oak-skills validate` checks every skill against the rules in the [guide to contributing a skill](contributing-a-skill.md). It only runs in the central repository, where `pnpm validate` runs it; anywhere else it stops with exit code 1 and suggests `oak-skills check` instead. Given paths, such as `oak-skills validate skills/central/oak-tdd/SKILL.md`, it reports only the skills that hold them, as the pre-commit hook does.
 
 ## Releasing
 
@@ -237,14 +238,14 @@ This section is for the skills maintainer, who releases weekly, and whenever a f
 
 The gates run immediately before publishing, because a published version can never be withdrawn:
 
-| Gate                           | Fails when                                                                                                                                                                                                                                                                  |
-| ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Secrets and personal data      | gitleaks finds a secret, an email address or a phone number anywhere in the git history                                                                                                                                                                                     |
-| Skill scan                     | Cisco skill-scanner finds a high-severity problem in any skill                                                                                                                                                                                                              |
-| `validate`, tests, build       | Any of them fails, as in CI                                                                                                                                                                                                                                                 |
-| publint                        | `package.json` describes the package wrongly, such as a `bin` file that isn't built                                                                                                                                                                                         |
-| Package contents               | The tarball holds anything outside `skills/`, `templates/` and `dist/` other than `package.json`, `README.md`, `CHANGELOG.md` and `LICENSE`; misses a file the tool needs; has an install script or runtime dependencies; or contains the `todo-engineers-team` placeholder |
-| Placeholder team in CODEOWNERS | `.github/CODEOWNERS` still names `todo-engineers-team`                                                                                                                                                                                                                      |
+| Gate                           | Fails when                                                                                                                                                                                                                                                                                    |
+| ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Secrets and personal data      | gitleaks finds a secret, an email address or a phone number anywhere in the git history                                                                                                                                                                                                       |
+| Skill scan                     | Cisco skill-scanner finds a high-severity problem in any skill                                                                                                                                                                                                                                |
+| `validate`, tests, build       | Any of them fails, as in CI                                                                                                                                                                                                                                                                   |
+| publint                        | `package.json` describes the package wrongly, such as a `bin` file that isn't built                                                                                                                                                                                                           |
+| Package contents               | The tarball holds anything outside `skills/`, `templates/` and `dist/` other than `package.json`, `README.md`, `CHANGELOG.md` and `LICENSE`; misses `CHANGELOG.md` or a file the tool needs; has an install script or runtime dependencies; or contains the `todo-engineers-team` placeholder |
+| Placeholder team in CODEOWNERS | `.github/CODEOWNERS` still names `todo-engineers-team`                                                                                                                                                                                                                                        |
 
 Run the package gates locally with `pnpm publish:gate`. It builds, packs the package as Changesets does, and checks the tarball.
 
@@ -268,15 +269,15 @@ A published version can't be deleted or reused. Instead:
 
 `status` and `check` use the same exit codes. When several apply, the highest wins: a configuration problem makes the other results unreliable, so fix it first. The [troubleshooting guide](troubleshooting.md#exit-codes) explains each one.
 
-| Code | Meaning                                                                                                                             | What to do                                                                             |
-| ---- | ----------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
-| 0    | Clean                                                                                                                               | Nothing                                                                                |
-| 1    | A synced skill was edited locally                                                                                                   | Run `oak-skills promote`, or revert the edit                                           |
-| 2    | Out of date: the skills were synced from a different version from the one installed, or `oakSkills` has changed since the last sync | Run `oak-skills sync`                                                                  |
-| 3    | Both: edited locally, and out of date                                                                                               | Promote or revert, then sync                                                           |
-| 4    | Something in `.agents/skills/` or `.claude/skills/` that `oak-skills` didn't write                                                  | Move a skill into the central repository with `oak-skills promote --new`, or remove it |
-| 5    | A configuration problem, such as an unknown profile, skill or bundle in `oakSkills`                                                 | Fix `package.json`                                                                     |
-| 6    | `check` only: the `AGENTS.md` files on one path together pass 32 KiB                                                                | Shorten them, and move how-to guidance into skills                                     |
+| Code | Meaning                                                                                                                                                                             | What to do                                                                             |
+| ---- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| 0    | Clean                                                                                                                                                                               | Nothing                                                                                |
+| 1    | A synced skill was edited locally                                                                                                                                                   | Run `oak-skills promote`, or revert the edit                                           |
+| 2    | Out of date: the skills were synced from a different version from the one installed, `oakSkills` has changed since the last sync, or `.agents/skills/.oak-manifest.json` is missing | Run `oak-skills sync`                                                                  |
+| 3    | Both: edited locally, and out of date                                                                                                                                               | Promote or revert, then sync                                                           |
+| 4    | Something in `.agents/skills/` or `.claude/skills/` that `oak-skills` didn't write                                                                                                  | Move a skill into the central repository with `oak-skills promote --new`, or remove it |
+| 5    | A configuration problem, such as an unknown profile, skill or bundle in `oakSkills`                                                                                                 | Fix `package.json`                                                                     |
+| 6    | `check` only: the `AGENTS.md` files on one path together pass 32 KiB                                                                                                                | Shorten them, and move how-to guidance into skills                                     |
 
 Every command also uses these:
 

@@ -16,7 +16,8 @@
   "files": [
     "skills/",
     "templates/",
-    "dist/"
+    "dist/",
+    "CHANGELOG.md"
   ],
   "engines": {
     "node": ">=24.22.1 <25"

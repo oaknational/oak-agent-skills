@@ -79,6 +79,13 @@ describe('computeStatus', () => {
         ['.agents/skills/oak-alpha/notes.md'],
       ],
       [
+        'an added file named __proto__',
+        (root: string) => {
+          writeFileSync(join(root, '.agents/skills/oak-alpha/__proto__'), 'x');
+        },
+        ['.agents/skills/oak-alpha/__proto__'],
+      ],
+      [
         'a deleted skill folder',
         (root: string) => {
           removeTree(join(root, '.agents/skills/oak-alpha'));
@@ -181,6 +188,18 @@ describe('computeStatus', () => {
       expect(code).toBe(ExitCode.Unmanaged);
       expect(report.unmanaged).toEqual(['.agents/skills/oak-local', '.claude/skills/team-skill']);
     });
+
+    it.each(['constructor', 'toString', '__proto__'])(
+      'reports a folder named %s, which every object inherits',
+      (name) => {
+        const { root } = synced();
+        writeTree(root, { [`.agents/skills/${name}/SKILL.md`]: 'x' });
+        expect(status(root)).toMatchObject({
+          code: ExitCode.Unmanaged,
+          report: { unmanaged: [`.agents/skills/${name}`] },
+        });
+      },
+    );
 
     it('reports existing folders in a repository that has never synced', () => {
       const repo = createTempRepo('single-package');

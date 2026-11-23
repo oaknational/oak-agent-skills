@@ -1,4 +1,4 @@
-import { readFileSync, statSync } from 'node:fs';
+import { existsSync, readFileSync, statSync } from 'node:fs';
 import { join, posix } from 'node:path';
 import { runGit } from './git.ts';
 
@@ -13,11 +13,13 @@ export interface AgentsMdReport {
   failures: string[];
 }
 
-// Tracked and untracked AGENTS.md files, leaving out anything git ignores, such as node_modules.
+// Tracked and untracked AGENTS.md files, leaving out anything git ignores, such as node_modules,
+// and tracked files deleted from the working tree.
 function findAgentsMd(root: string): string[] {
   return runGit(['ls-files', '-z', '--cached', '--others', '--exclude-standard'], root)
     .split('\0')
     .filter((path) => path === 'AGENTS.md' || path.endsWith('/AGENTS.md'))
+    .filter((path) => existsSync(join(root, path)))
     .sort();
 }
 
