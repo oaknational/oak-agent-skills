@@ -37,9 +37,18 @@ export interface SyncPlan {
   links: LinkPlan;
   // Files with local edits that this sync replaces or removes, for a warning.
   replacedEdits: string[];
+  deletedIgnored: string[];
   warnings: string[];
   manifest: Manifest;
   manifestChanged: boolean;
+}
+
+export function deletedIgnoredWarning(paths: readonly string[], dryRun: boolean): string {
+  return `${dryRun ? 'would delete' : 'deleted'} ${paths.join(', ')}, which git ignores, so git has no copy.`;
+}
+
+function ignoredIn(name: string, state: FolderState): string[] {
+  return state.ignored.map((path) => `${SKILLS_DIR}/${name}/${path}`);
 }
 
 function localChanges(
@@ -70,7 +79,7 @@ export function planSync(
 
   const plan: Pick<
     SyncPlan,
-    'add' | 'update' | 'unchanged' | 'remove' | 'conflicts' | 'replacedEdits'
+    'add' | 'update' | 'unchanged' | 'remove' | 'conflicts' | 'replacedEdits' | 'deletedIgnored'
   > = {
     add: [],
     update: [],
@@ -78,6 +87,7 @@ export function planSync(
     remove: [],
     conflicts: [],
     replacedEdits: [],
+    deletedIgnored: [],
   };
   const synced: Manifest['skills'] = {};
 
@@ -97,6 +107,7 @@ export function planSync(
       } else if (recorded !== undefined && current !== undefined) {
         plan.update.push(skill);
         plan.replacedEdits.push(...localChanges(skill.name, current, recorded.files));
+        plan.deletedIgnored.push(...ignoredIn(skill.name, current));
       } else {
         plan.conflicts.push(skill.name);
         continue;
@@ -112,6 +123,7 @@ export function planSync(
     if (current === undefined) continue;
     plan.remove.push(name);
     plan.replacedEdits.push(...localChanges(name, current, recorded.files));
+    plan.deletedIgnored.push(...ignoredIn(name, current));
   }
 
   const unmanaged = folders.skillEntries.filter(

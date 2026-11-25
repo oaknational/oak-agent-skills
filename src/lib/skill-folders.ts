@@ -1,5 +1,5 @@
 import { existsSync, lstatSync, readdirSync, readlinkSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, relative } from 'node:path';
 import { OakSkillsError } from './errors.ts';
 import { ExitCode } from './exit-codes.ts';
 import { listFolder } from './files.ts';
@@ -10,6 +10,7 @@ import { LINKS_DIR, SKILLS_DIR } from './manifest.ts';
 export interface FolderState {
   files: Record<string, string>;
   others: string[];
+  ignored: string[];
 }
 
 export interface SkillFolders {
@@ -74,15 +75,30 @@ export function readSkillFolders(root: string): SkillFolders {
     read: (name) => {
       const contents = listed.get(name);
       if (contents === undefined) return undefined;
-      const kept = (path: string) => !ignored.has(`${SKILLS_DIR}/${name}/${path}`);
-      return {
-        files: Object.fromEntries(
-          contents.files
-            .filter(kept)
-            .map((file) => [file, hashFile(join(root, SKILLS_DIR, name, file))]),
-        ),
-        others: contents.others.filter(kept),
-      };
+      return folderState(join(root, SKILLS_DIR, name), contents, (path) =>
+        ignored.has(`${SKILLS_DIR}/${name}/${path}`),
+      );
     },
   };
+}
+
+function folderState(
+  dir: string,
+  { files, others }: { files: string[]; others: string[] },
+  isIgnored: (path: string) => boolean,
+): FolderState {
+  return {
+    files: Object.fromEntries(
+      files.filter((file) => !isIgnored(file)).map((file) => [file, hashFile(join(dir, file))]),
+    ),
+    others: others.filter((path) => !isIgnored(path)),
+    ignored: [...files, ...others].filter(isIgnored).sort(),
+  };
+}
+
+export function readDraft(root: string, dir: string): FolderState {
+  const contents = listFolder(dir);
+  const fromRoot = (path: string) => relative(root, join(dir, path));
+  const ignored = ignoredByGit(root, [...contents.files, ...contents.others].map(fromRoot));
+  return folderState(dir, contents, (path) => ignored.has(fromRoot(path)));
 }

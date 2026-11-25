@@ -15,13 +15,13 @@ import { PACKAGE_DIR, readCatalogue } from './catalogue.ts';
 import { OakSkillsError } from './errors.ts';
 import { listFolder } from './files.ts';
 import { ExitCode } from './exit-codes.ts';
-import { hashFolder } from './hash.ts';
 import { runGit } from './git.ts';
 import { CENTRAL_REPO, type GitHub } from './github.ts';
 import { LINKS_DIR, readManifest, SKILLS_DIR } from './manifest.ts';
 import { readOakSkillsConfig } from './profiles.ts';
 import type { Prompt } from './prompt.ts';
 import { findRepositoryRoot, readRootPackageJson } from './root.ts';
+import { readDraft } from './skill-folders.ts';
 import { computeStatus } from './status.ts';
 import { applySync, planSync } from './sync.ts';
 import { CODEOWNERS_PATH, MAINTAINERS } from './validate/codeowners.ts';
@@ -64,6 +64,7 @@ export interface PromoteResult {
   url: string | undefined;
   conflicted: boolean;
   newBundle: string | undefined;
+  deletedIgnored: string[];
 }
 
 const fail = (message: string, hint?: string) =>
@@ -142,6 +143,24 @@ function diffNoIndex(cwd: string, from: string, to: string): string {
     throw fail(`git diff failed: ${result.stderr.trim()}`);
   }
   return result.stdout;
+}
+
+function diffDraft(root: string, installed: string, draft: string): string {
+  const shipped = listFolder(installed);
+  const local = readDraft(root, draft);
+  const before = new Set([...shipped.files, ...shipped.others]);
+  const after = new Set([...Object.keys(local.files), ...local.others]);
+  const side = (entries: Set<string>, folder: string, path: string) =>
+    entries.has(path) ? relative(root, join(folder, path)) : '/dev/null';
+  return [...new Set([...before, ...after])]
+    .sort()
+    .map((path) => diffNoIndex(root, side(before, installed, path), side(after, draft, path)))
+    .join('');
+}
+
+function copyDraft(root: string, from: string, to: string): void {
+  const skipped = new Set(readDraft(root, from).ignored.map((path) => join(from, path)));
+  cpSync(from, to, { recursive: true, filter: (source) => !skipped.has(source) });
 }
 
 function isRealFolder(path: string): boolean {
@@ -234,8 +253,7 @@ function locateEdit(root: string, packageDir: string, name: string): Located {
       `${name} hasn't been edited: it matches the synced copy, so there's nothing to promote.`,
     );
   }
-  const installed = join(packageDir, skill.source);
-  const change = diffNoIndex(root, relative(root, installed) || '.', `${SKILLS_DIR}/${name}`);
+  const change = diffDraft(root, join(packageDir, skill.source), join(root, SKILLS_DIR, name));
   return {
     root,
     version: manifest.package.version,
@@ -312,7 +330,7 @@ function locateDraft(
   if (
     first !== undefined &&
     second !== undefined &&
-    JSON.stringify(hashFolder(first)) !== JSON.stringify(hashFolder(second))
+    JSON.stringify(readDraft(root, first).files) !== JSON.stringify(readDraft(root, second).files)
   ) {
     throw fail(
       `There are different drafts of ${name} in ${SKILLS_DIR}/ and ${LINKS_DIR}/, and promote proposes only one.`,
@@ -326,8 +344,8 @@ function locateDraft(
       'Run "oak-skills check" to see what, and fix it first.',
     );
   }
-  const files = listFolder(draft)
-    .files.map((file) => `  ${relative(root, join(draft, file))}`)
+  const files = Object.keys(readDraft(root, draft).files)
+    .map((file) => `  ${relative(root, join(draft, file))}`)
     .join('\n');
   return {
     root,
@@ -337,6 +355,18 @@ function locateDraft(
     change: `New skill files:\n${files}`,
     newBundle: bundle.isNew ? bundle.code : undefined,
   };
+}
+
+function ignoredToDelete(
+  root: string,
+  packageDir: string,
+  located: Located,
+  isNew: boolean,
+): string[] {
+  if (!isNew) return planSync(root, packageDir).deletedIgnored;
+  return located.localFolders.flatMap((folder) =>
+    readDraft(root, folder).ignored.map((path) => relative(root, join(folder, path))),
+  );
 }
 
 function git(cwd: string, ...args: string[]): string {
@@ -376,7 +406,7 @@ function applyEdit(clone: string, work: string, located: Located): boolean {
   git(clone, 'worktree', 'add', '--quiet', '--detach', worktree, tag);
   try {
     rmSync(join(worktree, located.source), { recursive: true, force: true });
-    cpSync(located.localFolders[0] ?? '', join(worktree, located.source), { recursive: true });
+    copyDraft(located.root, located.localFolders[0] ?? '', join(worktree, located.source));
     git(worktree, 'add', '--all', '--', located.source);
     // git writes the file itself: a patch needs its trailing whitespace, which runGit trims.
     git(worktree, 'diff', '--cached', '--binary', `--output=${patchFile}`);
@@ -440,6 +470,7 @@ export async function promote(
       url: undefined,
       conflicted: false,
       newBundle: located.newBundle,
+      deletedIgnored: ignoredToDelete(root, packageDir, located, options.isNew),
     };
   }
 
@@ -459,7 +490,7 @@ export async function promote(
         throw fail(`The central repository already has ${located.source}.`);
       }
       if (located.newBundle !== undefined) addBundleOwners(clone, located.newBundle);
-      cpSync(located.localFolders[0] ?? '', join(clone, located.source), { recursive: true });
+      copyDraft(root, located.localFolders[0] ?? '', join(clone, located.source));
     } else {
       conflicted = applyEdit(clone, work, located);
     }
@@ -515,12 +546,21 @@ export async function promote(
 
     // Restore this repository, so its own pull request passes "oak-skills check". The change
     // arrives with the next release.
+    const deletedIgnored = ignoredToDelete(root, packageDir, located, options.isNew);
     if (options.isNew) {
       for (const folder of located.localFolders) rmSync(folder, { recursive: true, force: true });
     } else {
       applySync(planSync(root, packageDir));
     }
-    return { title, bump, change: located.change, url, conflicted, newBundle: located.newBundle };
+    return {
+      title,
+      bump,
+      change: located.change,
+      url,
+      conflicted,
+      newBundle: located.newBundle,
+      deletedIgnored,
+    };
   } finally {
     rmSync(work, { recursive: true, force: true });
   }

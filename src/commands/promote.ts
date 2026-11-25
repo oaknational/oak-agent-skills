@@ -4,6 +4,7 @@ import { CENTRAL_REPO, ghCli } from '../lib/github.ts';
 import { SKILL_NAME } from '../lib/manifest.ts';
 import { terminalPrompt } from '../lib/prompt.ts';
 import { BUMPS, promote as promoteSkill, type Bump } from '../lib/promote.ts';
+import { deletedIgnoredWarning } from '../lib/sync.ts';
 import type { Command } from './command.ts';
 
 export const promote: Command = {
@@ -80,6 +81,9 @@ export const promote: Command = {
           ? `Would then remove the local draft of ${name}.`
           : `Would then restore the synced copy of ${name} here with "oak-skills sync".`,
       );
+      if (result.deletedIgnored.length > 0) {
+        output.err(`Warning: ${deletedIgnoredWarning(result.deletedIgnored, true)}`);
+      }
       output.out('Dry run: nothing was cloned, opened or changed.');
       return ExitCode.Ok;
     }
@@ -96,6 +100,9 @@ export const promote: Command = {
         ? `Removed the local draft of ${name}. It arrives with the next release once the pull request merges.`
         : `Restored the synced copy of ${name}. Your change arrives with the next release once the pull request merges.`,
     );
+    if (result.deletedIgnored.length > 0) {
+      output.err(`Warning: ${deletedIgnoredWarning(result.deletedIgnored, false)}`);
+    }
     if (result.newBundle !== undefined) {
       output.out(
         `Once that release is out, set oakSkills.bundle to "${result.newBundle}" in package.json and run "oak-skills sync" to receive it.`,

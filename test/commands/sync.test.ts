@@ -101,6 +101,22 @@ describe('oak-skills sync', () => {
         'Warning: would replace local edits in',
       );
     });
+
+    it('names the files git ignores that a real sync would delete, then deletes them', async () => {
+      const { root } = consumer();
+      await sync(root);
+      writeTree(root, {
+        '.gitignore': '*.local\n',
+        '.agents/skills/oak-beta/notes.local': 'x',
+        '.agents/skills/oak-beta/SKILL.md': 'edited',
+      });
+      expect((await sync(root, '--dry-run')).err).toContain(
+        'Warning: would delete .agents/skills/oak-beta/notes.local, which git ignores, so git has no copy.',
+      );
+      expect((await sync(root)).err).toContain(
+        'Warning: deleted .agents/skills/oak-beta/notes.local, which git ignores, so git has no copy.',
+      );
+    });
   });
 
   describe('--json', () => {
@@ -118,6 +134,7 @@ describe('oak-skills sync', () => {
         unchanged: [],
         links: { created: ['oak-alpha', 'oak-beta'], removed: [] },
         replacedEdits: [],
+        deletedIgnored: [],
         unmanaged: [],
         conflicts: [],
         warnings: [],

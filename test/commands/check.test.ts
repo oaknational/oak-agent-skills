@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
-import { readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { TROUBLESHOOTING_ANCHORS } from '../../src/commands/check.ts';
 import { applySync, planSync } from '../../src/lib/sync.ts';
 import { run } from '../../src/run.ts';
@@ -131,6 +131,16 @@ describe('oak-skills check', () => {
     expect(result.code).toBe(5);
     expect(result.err).toContain('Fix: correct the oakSkills settings in the root package.json.');
     expect(result.err).toContain(`See ${docs}#exit-code-5-a-configuration-problem`);
+  });
+
+  it('gives only the link advice when a skills folder is a link', async () => {
+    const { root } = synced();
+    removeTree(join(root, '.claude/skills'));
+    symlinkSync('../.agents/skills', join(root, '.claude/skills'));
+    const result = await check(root);
+    expect(result.code).toBe(5);
+    expect(result.err).toContain('Remove the link, then run "oak-skills sync".');
+    expect(result.err).not.toContain('correct the oakSkills settings');
   });
 
   it('passes with a warning when AGENTS.md is long', async () => {

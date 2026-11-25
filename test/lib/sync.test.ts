@@ -264,10 +264,42 @@ describe('files git ignores', () => {
       unchanged: ['oak-alpha', 'oak-beta'],
       unmanaged: [],
       replacedEdits: [],
+      deletedIgnored: [],
       links: { unmanaged: [] },
     });
     expect(hasChanges(plan)).toBe(false);
     expect(existsSync(join(root, '.agents/skills/oak-alpha/notes.local'))).toBe(true);
+  });
+
+  it('names one it deletes when it replaces an edited skill', () => {
+    const { root } = consumer();
+    sync(root);
+    writeTree(root, {
+      '.gitignore': '*.local\n',
+      '.agents/skills/oak-alpha/notes.local': 'x',
+      '.agents/skills/oak-alpha/SKILL.md': 'edited',
+    });
+    const plan = sync(root);
+    expect(plan).toMatchObject({
+      update: [{ name: 'oak-alpha' }],
+      replacedEdits: ['.agents/skills/oak-alpha/SKILL.md'],
+      deletedIgnored: ['.agents/skills/oak-alpha/notes.local'],
+    });
+    expect(existsSync(join(root, '.agents/skills/oak-alpha/notes.local'))).toBe(false);
+  });
+
+  it('names one it deletes when it removes a skill', () => {
+    const { root } = consumer();
+    sync(root);
+    writeTree(root, { '.gitignore': '*.local\n', '.agents/skills/oak-beta/notes.local': 'x' });
+    setOakSkills(root, { profiles: ['base'], exclude: ['oak-beta'] });
+    const plan = sync(root);
+    expect(plan).toMatchObject({
+      remove: ['oak-beta'],
+      replacedEdits: [],
+      deletedIgnored: ['.agents/skills/oak-beta/notes.local'],
+    });
+    expect(existsSync(join(root, '.agents/skills/oak-beta'))).toBe(false);
   });
 });
 

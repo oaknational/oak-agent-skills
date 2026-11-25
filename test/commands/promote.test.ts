@@ -130,6 +130,24 @@ describe('oak-skills promote', () => {
     });
   });
 
+  it('names the files git ignores that restoring the copy deletes, on a dry run and after', async () => {
+    const { repo, remote } = setUp();
+    writeTree(repo.root, {
+      '.gitignore': '*.local\n',
+      '.agents/skills/oak-beta/notes.local': 'private\n',
+    });
+    const args = ['oak-beta', '--message', 'Improve the guidance', '--bump', 'patch'];
+    const dry = await promote(repo.root, fakeGitHub(remote), ...args, '--dry-run');
+    expect(dry.out).not.toContain('notes.local');
+    expect(dry.err).toContain(
+      'Warning: would delete .agents/skills/oak-beta/notes.local, which git ignores, so git has no copy.',
+    );
+    const real = await promote(repo.root, fakeGitHub(remote), ...args);
+    expect(real.err).toContain(
+      'Warning: deleted .agents/skills/oak-beta/notes.local, which git ignores, so git has no copy.',
+    );
+  });
+
   it('says when it opened a draft because of a conflict', async () => {
     const { repo, remote } = setUp();
     remote.commitToMain(

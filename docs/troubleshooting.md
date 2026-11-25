@@ -38,7 +38,7 @@ There's a folder or file in `.agents/skills/` or `.claude/skills/` that `oak-ski
 - **To keep a skill**, propose it for your repository's bundle with `pnpm exec oak-skills promote --new <name>`. It removes the local draft, and the skill arrives with the next release.
 - **Otherwise**, delete it.
 
-`oak-skills` skips anything git ignores, because it's never committed. So for a local file such as `.DS_Store`, add it to `.gitignore` rather than deleting it each time.
+`oak-skills` skips anything git ignores, because it's never committed: `check` doesn't report it, and `promote` leaves it out of the pull request. So for a local file such as `.DS_Store`, add it to `.gitignore` rather than deleting it each time. When `sync` or `promote` replaces or removes a skill's folder, ignored files inside it go too, and each one is named.
 
 Personal skills you don't want to share belong in `~/.claude/skills/` or `~/.agents/skills/` on your own machine, not in the repository. Don't give them the `oak-` prefix: in Claude Code, a personal skill overrides a project skill with the same name.
 
