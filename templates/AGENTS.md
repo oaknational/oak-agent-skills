@@ -29,5 +29,5 @@
 This repository receives Oak's shared agent skills from the `@oaknational/oak-agent-skills` package. They're synced into `.agents/skills/`, and linked into `.claude/skills/` for Claude Code.
 
 - Don't edit the synced skills here: `oak-skills check` fails on local edits, and the next sync would overwrite them.
-- To improve a skill, edit it, then run `pnpm exec oak-skills promote <skill>`. It opens a pull request in the central repository and restores the synced copy here.
+- To improve a skill, edit it, then ask the user before running `pnpm exec oak-skills promote <skill>`. It opens a pull request in the central repository, which other people see, and restores the synced copy here.
 - Which skills this repository receives is set by `oakSkills` in `package.json`.

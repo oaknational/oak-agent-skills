@@ -15,7 +15,7 @@ artefacts — read the spec when a judgement is close.
 
 - GOV.UK — Understanding accessibility requirements for public sector bodies:
   <https://www.gov.uk/guidance/accessibility-requirements-for-public-sector-websites-and-apps>
-- GOV.UK Design System and accessibility guidance (patterns that meet WCAG):
+- GOV.UK Service Manual, understanding WCAG 2.2:
   <https://www.gov.uk/service-manual/helping-people-to-use-your-service/understanding-wcag>
 
 WCAG itself is published by the W3C under its document licence; this skill's summary may be reused

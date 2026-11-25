@@ -42,6 +42,7 @@ metadata:
 - Set `metadata.owner` to the owning team: the engineering team for shared skills, or the repository's team for a bundle.
 - Set `metadata.updated` to today's date whenever any file in the skill changes.
 - Quote every `metadata` value, because each must be a string.
+- Add `compatibility`, up to 500 characters, only when the skill needs something in its environment, such as the GitHub CLI or an MCP server.
 - Don't add `allowed-tools` or any other field.
 
 ## 4. Write the description

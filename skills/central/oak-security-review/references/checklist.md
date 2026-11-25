@@ -23,6 +23,7 @@ Detailed questions for each area of a security review. Skip the ones that don't 
 - Do redirects go only to allowed destinations, rather than to any URL in a query string?
 - Is untrusted data kept away from `eval`, `new Function`, dynamic `import` of a path from input, and template engines that execute code?
 - When objects from input are merged into other objects, are keys such as `__proto__` and `constructor` blocked?
+- Is mass assignment prevented? Copy only the fields the caller may set from a request into a record, so a request can't set a role, an owner or a price.
 - Could a crafted input make a regular expression run for a very long time? Watch for nested repetition in patterns applied to input.
 - Are uploaded files checked for type and size, stored outside the web root or in object storage, and served with safe headers?
 - Are limits set on request size, pagination and anything a caller can make expensive?
@@ -60,6 +61,7 @@ Detailed questions for each area of a security review. Skip the ones that don't 
 - Is cross-origin access limited to the origins that need it, without reflecting any origin with credentials?
 - Are security headers, such as a content security policy, set or kept intact?
 - Are expensive or sensitive endpoints rate limited?
+- Does every incoming webhook check the sender's signature over the raw request body, with a constant-time comparison, and reject old or replayed deliveries?
 - Do error responses avoid revealing whether a record exists to someone who isn't allowed to see it?
 
 ## CI and automation
@@ -70,3 +72,10 @@ Detailed questions for each area of a security review. Skip the ones that don't 
 - Are third-party actions pinned to a commit hash?
 - Do checkouts avoid saving credentials when later steps don't need them?
 - Are installs run with lifecycle scripts disabled where the workflow doesn't need them?
+
+## AI and language models
+
+- Is text from users, documents, web pages or tools kept apart from the instructions a model is given, and treated as untrusted, so it can't change what the model does? This is prompt injection.
+- Is a model's output treated as untrusted input: checked before use, encoded before it's rendered, and never run as code, a query or a shell command?
+- Can a model call only the tools, and reach only the data, that the person using it may use? Does a person confirm any action that changes or sends something?
+- Are prompts and model inputs and outputs kept out of logs and analytics when they could hold personal data or secrets?
