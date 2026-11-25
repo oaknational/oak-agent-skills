@@ -21,6 +21,7 @@ publint
 readlink
 reflow
 reflows
+sbox
 SDLC
 symref
 thenational

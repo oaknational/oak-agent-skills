@@ -73,7 +73,7 @@ export const promote: Command = {
       output.out(`Would add a ${result.bump} changeset, and set metadata.updated to today.`);
       if (result.newBundle !== undefined) {
         output.out(
-          `Would add a CODEOWNERS line for skills/repos/${result.newBundle}/ naming the skills maintainers.`,
+          `Would add a CODEOWNERS line for skills/repos/${result.newBundle}/ naming the skills maintainers, and ${result.newBundle} to cspell-words.txt.`,
         );
       }
       output.out(

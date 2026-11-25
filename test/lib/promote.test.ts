@@ -40,6 +40,7 @@ beforeEach(() => {
 });
 afterEach(() => {
   vi.unstubAllEnvs();
+  vi.unstubAllGlobals();
   for (const cleanup of cleanups.splice(0)) cleanup();
 });
 
@@ -275,6 +276,43 @@ describe('promote, 6.4 to 6.7: the pull request', () => {
 
     expect(statusExitCode(computeStatus(repo.root, packageFixture))).toBe(ExitCode.Ok);
     expect(repo.git('status', '--porcelain')).toBe('');
+  });
+
+  it('names the branch and its changeset from the same moment', async () => {
+    let tick = 0;
+    const RealDate = Date;
+    vi.stubGlobal(
+      'Date',
+      class extends RealDate {
+        constructor(value?: number | string | Date) {
+          if (value === undefined) super(NOW.getTime() + 100 * tick++);
+          else super(value);
+        }
+      },
+    );
+    const repo = consumer();
+    editAlpha(repo.root);
+    const remote = central();
+    const github = fakeGitHub(remote);
+    await promote(
+      {
+        cwd: repo.root,
+        github,
+        prompt: undefined,
+        packageDir: packageFixture,
+        log: () => undefined,
+      },
+      options(),
+    );
+    const head = github.pullRequests[0]?.head ?? '';
+    const stamp = head.replace('promote/oak-alpha-', '');
+    expect(
+      execFileSync('git', ['ls-tree', '--name-only', head, '.changeset/'], {
+        cwd: remote.remote,
+        env: isolatedGitEnv,
+        encoding: 'utf8',
+      }),
+    ).toContain(`.changeset/promote-oak-alpha-${stamp}.md`);
   });
 
   it('applies a diff that ends on a blank line of context', async () => {
@@ -567,6 +605,48 @@ describe('promote --new --bundle, the first skill of a new bundle', () => {
     await run(repo.root, github, { name: 'ora-lint', isNew: true, bundle: 'ora' }).promise;
     expect(remote.read(github.pullRequests[0]?.head ?? '', '.github/CODEOWNERS')).toBe(
       '* @oaknational/skills-maintainers\n/skills/repos/ora/ @oaknational/skills-maintainers',
+    );
+  });
+
+  it('adds the code to the spelling word list, in order', async () => {
+    const repo = noBundle();
+    draft(repo, 'sbox-demo');
+    const remote = central();
+    remote.commitToMain(
+      { 'cspell-words.txt': `${['agentsmd', 'zizmor'].join('\n')}\n` },
+      'chore: words',
+    );
+    const github = fakeGitHub(remote);
+    await run(repo.root, github, { name: 'sbox-demo', isNew: true, bundle: 'sbox' }).promise;
+    expect(remote.read(github.pullRequests[0]?.head ?? '', 'cspell-words.txt')).toBe(
+      ['agentsmd', 'sbox', 'zizmor'].join('\n'),
+    );
+    expect(github.pullRequests[0]?.body).toContain('It also added `sbox` to `cspell-words.txt`.');
+  });
+
+  it('says to use --bundle when oakSkills names a bundle the installed package lacks', async () => {
+    const repo = noBundle();
+    setOakSkills(repo.root, { profiles: ['base'], bundle: 'ora' });
+    draft(repo);
+    await expect(
+      run(repo.root, fakeGitHub(central()), { name: 'ora-lint', isNew: true }).promise,
+    ).rejects.toThrow(
+      expect.objectContaining({
+        message: 'oakSkills.bundle names "ora", which the installed package doesn\'t have yet.',
+        hint: 'To propose its first skill, remove oakSkills.bundle from package.json, then run promote --new with --bundle ora.',
+      }),
+    );
+  });
+
+  it('suggests moving the code to the front when a name ends with it', async () => {
+    const repo = consumer();
+    draft(repo, 'lint-owa');
+    await expect(
+      run(repo.root, fakeGitHub(central()), { name: 'lint-owa', isNew: true }).promise,
+    ).rejects.toThrow(
+      expect.objectContaining({
+        hint: 'Rename the folder and the name in its SKILL.md, for example to owa-lint.',
+      }),
     );
   });
 
