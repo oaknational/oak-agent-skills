@@ -1,6 +1,12 @@
 import { ExitCode } from '../lib/exit-codes.ts';
 import { linkPath } from '../lib/shims.ts';
-import { applySync, hasChanges, planSync, type SyncPlan } from '../lib/sync.ts';
+import {
+  applySync,
+  deletedIgnoredWarning,
+  hasChanges,
+  planSync,
+  type SyncPlan,
+} from '../lib/sync.ts';
 import type { Command, Output } from './command.ts';
 
 function report(plan: SyncPlan, dryRun: boolean, output: Output): void {
@@ -20,6 +26,9 @@ function report(plan: SyncPlan, dryRun: boolean, output: Output): void {
       `Warning: ${verb('replaced', 'would replace')} local edits in ${plan.replacedEdits.join(', ')}. ` +
         'Committed edits are still in git history; use "oak-skills promote" to send an edit upstream.',
     );
+  }
+  if (plan.deletedIgnored.length > 0) {
+    output.err(`Warning: ${deletedIgnoredWarning(plan.deletedIgnored, dryRun)}`);
   }
   for (const name of plan.unmanaged) {
     output.err(`Note: .agents/skills/${name} wasn't written by oak-skills, so it was left alone.`);
@@ -79,6 +88,7 @@ export const sync: Command = {
               removed: plan.links.remove,
             },
             replacedEdits: plan.replacedEdits,
+            deletedIgnored: plan.deletedIgnored,
             unmanaged: [
               ...plan.unmanaged.map((n) => `.agents/skills/${n}`),
               ...plan.links.unmanaged.map(linkPath),

@@ -1,5 +1,6 @@
 import { checkAgentsMd } from '../lib/agents-md.ts';
 import { ExitCode } from '../lib/exit-codes.ts';
+import { linkedSkillFolder } from '../lib/skill-folders.ts';
 import { computeStatus, statusExitCode } from '../lib/status.ts';
 import type { Command } from './command.ts';
 import { STATUS_NAMES } from './status.ts';
@@ -44,17 +45,19 @@ export const check: Command = {
       return exitCode;
     }
 
-    const problem = (heading: string, items: readonly string[], fix: string): void => {
+    const problem = (heading: string, items: readonly string[], fix: string | undefined): void => {
       if (items.length === 0) return;
       output.err(`${heading}:`);
       for (const item of items) output.err(`  ${item}`);
-      output.err(`  Fix: ${fix}`);
+      if (fix !== undefined) output.err(`  Fix: ${fix}`);
       output.err('');
     };
     problem(
       'Configuration problems',
       report.configProblems,
-      'correct the oakSkills settings in the root package.json.',
+      linkedSkillFolder(report.root) === undefined
+        ? 'correct the oakSkills settings in the root package.json.'
+        : undefined,
     );
     problem(
       'Not written by oak-skills',

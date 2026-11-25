@@ -678,6 +678,70 @@ describe('promote --new with drafts in both skills folders', () => {
   });
 });
 
+describe('promote and files git ignores', () => {
+  const filesOn = (remote: CentralRemote, ref: string) =>
+    execFileSync('git', ['ls-tree', '-r', '--name-only', ref], {
+      cwd: remote.remote,
+      env: isolatedGitEnv,
+      encoding: 'utf8',
+    });
+
+  it('leaves them out of the diff and the pull request, and names them when it restores the copy', async () => {
+    const repo = consumer();
+    writeTree(repo.root, {
+      '.gitignore': '*.local.*\n',
+      '.agents/skills/oak-alpha/notes.local.md': 'private\n',
+    });
+    editAlpha(repo.root);
+    const remote = central();
+    const github = fakeGitHub(remote);
+    const preview = await run(repo.root, github, { dryRun: true }).promise;
+    expect(preview.change).toContain('+Read [the guide](references/guide.md) first.');
+    expect(preview.change).not.toContain('notes.local.md');
+    expect(preview.deletedIgnored).toEqual(['.agents/skills/oak-alpha/notes.local.md']);
+    expect(existsSync(join(repo.root, '.agents/skills/oak-alpha/notes.local.md'))).toBe(true);
+
+    const result = await run(repo.root, github).promise;
+    const head = github.pullRequests[0]?.head ?? '';
+    expect(remote.read(head, 'skills/central/oak-alpha/SKILL.md')).toContain('first.');
+    expect(filesOn(remote, head)).not.toContain('notes.local.md');
+    expect(result.deletedIgnored).toEqual(['.agents/skills/oak-alpha/notes.local.md']);
+    expect(existsSync(join(repo.root, '.agents/skills/oak-alpha/notes.local.md'))).toBe(false);
+  });
+
+  it('leaves them out of a new skill, and names them when it removes the draft', async () => {
+    const repo = consumer();
+    writeTree(repo.root, {
+      '.gitignore': '*.local.*\n',
+      '.agents/skills/owa-x/SKILL.md': skillText({ name: 'owa-x' }),
+      '.agents/skills/owa-x/notes.local.md': 'private\n',
+    });
+    const remote = central();
+    const github = fakeGitHub(remote);
+    const result = await run(repo.root, github, { name: 'owa-x', isNew: true }).promise;
+    const head = github.pullRequests[0]?.head ?? '';
+    expect(result.change).not.toContain('notes.local.md');
+    expect(filesOn(remote, head)).toContain('skills/repos/owa/owa-x/SKILL.md');
+    expect(filesOn(remote, head)).not.toContain('notes.local.md');
+    expect(result.deletedIgnored).toEqual(['.agents/skills/owa-x/notes.local.md']);
+  });
+
+  it('treats two drafts as the same when they differ only in files git ignores', async () => {
+    const repo = consumer();
+    const text = skillText({ name: 'owa-x' });
+    writeTree(repo.root, {
+      '.gitignore': '*.local.*\n',
+      '.agents/skills/owa-x/SKILL.md': text,
+      '.claude/skills/owa-x/SKILL.md': text,
+      '.claude/skills/owa-x/notes.local.md': 'private\n',
+    });
+    const result = await run(repo.root, fakeGitHub(central()), { name: 'owa-x', isNew: true })
+      .promise;
+    expect(result.deletedIgnored).toEqual(['.claude/skills/owa-x/notes.local.md']);
+    expect(existsSync(join(repo.root, '.claude/skills/owa-x'))).toBe(false);
+  });
+});
+
 describe('promote and GitHub failures', () => {
   const branches = (remote: CentralRemote) =>
     execFileSync('git', ['ls-remote', '--heads', remote.remote, 'promote/*'], {

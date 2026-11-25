@@ -120,13 +120,14 @@ It never touches anything else:
 - **Something it didn't write** in `.agents/skills/` or `.claude/skills/` is left alone, with a note.
 - **A folder it didn't write with the name of a skill you subscribe to** blocks that skill. `sync` skips it, reports it and exits with code 4. Move the folder's contents into the central repository with `oak-skills promote --new`, or remove it, then sync again.
 - **Local edits to a synced skill are replaced**, with a warning naming each file. Edits that are committed are still in git history. To keep an improvement, send it to the central repository with `oak-skills promote` first.
+- **Files git ignores inside a skill**, such as a `.DS_Store`, are left alone while the skill is unchanged. When `sync` replaces or removes the skill, they go with it, and `sync` names each one, because git has no copy.
 
 ### Options
 
-| Option      | What it does                                                                                                                                                                                                                     |
-| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `--dry-run` | Prints what `sync` would add, update, remove and link, and changes nothing.                                                                                                                                                      |
-| `--json`    | Prints the result as JSON, for scripts: the skills added, updated, removed and unchanged, the links created and removed, replaced edits, unmanaged entries, conflicts and warnings. Combine it with `--dry-run` to see the plan. |
+| Option      | What it does                                                                                                                                                                                                                                                |
+| ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--dry-run` | Prints what `sync` would add, update, remove and link, and changes nothing.                                                                                                                                                                                 |
+| `--json`    | Prints the result as JSON, for scripts: the skills added, updated, removed and unchanged, the links created and removed, replaced edits, deleted files git ignores, unmanaged entries, conflicts and warnings. Combine it with `--dry-run` to see the plan. |
 
 ### Exit codes
 
@@ -176,16 +177,16 @@ Synced skills are read-only here, but improving them is welcome: a local edit of
 `promote` first checks that `gh` is ready and that you can push to the central repository, so it never asks you anything it can't act on. It asks why you made the change and which version bump it needs, or takes them from `--message` and `--bump`. Then it:
 
 1. clones the central repository with your own `gh` login, and creates a branch from `main`;
-2. applies your change, taken against the release your copy came from, with a three-way merge, so it still applies if the skill has changed since;
+2. applies your change, taken against the release your copy came from, with a three-way merge, so it still applies if the skill has changed since. Files git ignores stay out of it, as they do from `check`;
 3. sets the skill's `metadata.updated` to today, and adds a changeset;
 4. opens a pull request with a [Conventional Commit](https://www.conventionalcommits.org/) title and the template filled in, including an `Originating-Repo:` line naming your repository. If the merge conflicted, the pull request is a draft with the conflict marked, for a reviewer to resolve. If GitHub won't open the pull request, `promote` deletes the branch it pushed and changes nothing here;
-5. restores the synced copy here with `oak-skills sync`, so your own pull request passes `oak-skills check`.
+5. restores the synced copy here with `oak-skills sync`, so your own pull request passes `oak-skills check`, and names any file git ignores that this deletes.
 
 Your improvement arrives with the next release, through the usual Dependabot pull request.
 
 ### Proposing a new skill
 
-To propose a skill for your repository's bundle, draft it in `.agents/skills/<name>/` or `.claude/skills/<name>/`, then run `pnpm exec oak-skills promote <name> --new`. The name must start with your repository's code, such as `owa-`, and `oakSkills` must name the bundle. `promote` proposes the whole folder for `skills/repos/<code>/`, then removes the local draft. If there's a draft in both folders, they must be the same, or `promote` stops and asks you to keep one. Follow the [guide to contributing a skill](contributing-a-skill.md) when you write it.
+To propose a skill for your repository's bundle, draft it in `.agents/skills/<name>/` or `.claude/skills/<name>/`, then run `pnpm exec oak-skills promote <name> --new`. The name must start with your repository's code, such as `owa-`, and `oakSkills` must name the bundle. `promote` proposes the whole folder for `skills/repos/<code>/`, apart from files git ignores, then removes the local draft, naming any ignored files that go with it. If there's a draft in both folders, they must be the same apart from files git ignores, or `promote` stops and asks you to keep one. Follow the [guide to contributing a skill](contributing-a-skill.md) when you write it.
 
 #### The first skill of a new bundle
 
