@@ -172,6 +172,20 @@ describe("the sync template's push job", () => {
     expect(runStep('Confirm nothing outside the skill folders changed', repo.root).status).toBe(0);
   });
 
+  it("keeps the team's own links, and replaces only links to the synced skills", () => {
+    const repo = prepare(goodArtifact);
+    symlinkSync('../../docs/team-skill', join(repo.root, '.claude/skills/team-skill'));
+    const result = runStep('Check the synced copy and recreate the Claude Code links', repo.root);
+    expect(result.status).toBe(0);
+    expect(readlinkSync(join(repo.root, '.claude/skills/team-skill'))).toBe(
+      '../../docs/team-skill',
+    );
+    expect(readlinkSync(join(repo.root, '.claude/skills/oak-alpha'))).toBe(
+      '../../.agents/skills/oak-alpha',
+    );
+    expect(existsSync(join(repo.root, '.claude/skills/oak-old'))).toBe(false);
+  });
+
   it.each([
     [
       'a symlink',

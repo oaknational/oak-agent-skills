@@ -98,7 +98,11 @@ jobs:
             echo "The synced copy contains something other than files and folders." >&2
             exit 1
           fi
-          find .claude/skills -mindepth 1 -maxdepth 1 -type l -delete
+          find .claude/skills -mindepth 1 -maxdepth 1 -type l | while IFS= read -r link; do
+            case "$(readlink "$link")" in
+              ../../.agents/skills/*) rm "$link" ;;
+            esac
+          done
           for dir in .agents/skills/*/; do
             [ -d "$dir" ] || continue
             name="$(basename "$dir")"
