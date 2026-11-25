@@ -51,16 +51,18 @@ Run it with `--dry-run` first to see what it would do without changing anything.
 When a file already exists, `init` leaves it alone and prints what to add to it instead:
 
 - **`CLAUDE.md`**: add a line holding just `@AGENTS.md` at the top.
-- **`.github/dependabot.yml`**: give `@oaknational/oak-agent-skills` a group of its own in the npm update, listed before any catch-all group, so its updates are never bundled with others.
-- **A Dependabot `cooldown`**: exempt the package in its `exclude` list, or every skills release waits out the cooldown.
+- **`.github/dependabot.yml`**: give `@oaknational/oak-agent-skills` a group of its own in the npm update for the repository root, listed before any group that would also take it, so its updates are never bundled with others. Dependabot puts a package in the first group that matches it.
+- **A group that takes every package**, such as one with the pattern `*`, one with no `patterns`, or a security-update group: `init` names each one, and asks you to add the package to its `exclude-patterns`. Security updates never use a version-update group, so a security catch-all needs this even when the package has its own group.
+- **A Dependabot `cooldown`** in the npm update: exempt the package in its `exclude` list, or every skills release waits out the cooldown. Cooldowns in other updates, such as `github-actions`, don't affect the package.
 - **pnpm's `minimumReleaseAge`** in `pnpm-workspace.yaml`: add the package to `minimumReleaseAgeExclude`, for the same reason.
-- **`.prettierignore`**, which `init` doesn't check: if your Prettier check covers Markdown or JSON, add `.agents/skills/`. Otherwise Prettier rewrites the synced files, and `check` reports them as edited. Prettier doesn't follow the `.claude/skills` links, so that one line is enough.
+- **`.prettierignore`**, when the repository has Prettier settings: if your Prettier check covers Markdown or JSON, add `.agents/skills/`. Otherwise Prettier rewrites the synced files, and `check` reports them as edited. Prettier doesn't follow the `.claude/skills` links, so that one line is enough.
+- **`.gitignore`**, when it ignores `.agents/skills/` or `.claude/skills/`, for example with a `.claude/` line: change the rule so git keeps the skill folders, such as `.claude/*` followed by `!.claude/skills/`. Otherwise what `sync` writes isn't committed, and `check` fails in every fresh clone.
 
 ### Before the first update arrives
 
 `init` finishes with a checklist of things it can't do for you:
 
-- The organisation's oak-skills GitHub App is installed on the repository. The sync workflow pushes with its token, so that required checks run again on the sync commit.
+- The organisation's Oak Agent Skills GitHub App is installed on the repository. The sync workflow pushes with its token, so that required checks run again on the sync commit.
 - The organisation Dependabot secrets `OAK_SKILLS_APP_CLIENT_ID` and `OAK_SKILLS_APP_KEY` are available to the repository.
 - `package.json` has a `packageManager` field naming pnpm, which the workflows use to install the right version.
 - `oak-skills check` is a required status check, so an edited or out-of-date skill can't merge.

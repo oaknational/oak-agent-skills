@@ -98,25 +98,154 @@ export function readReleaseAge(workspaceYaml: string): ReleaseAge {
 }
 
 export interface DependabotSettings {
-  // A group whose patterns include the package.
-  hasGroup: boolean;
-  // Whether any update sets a cooldown, and whether every cooldown exempts the package.
+  // The root npm update puts the package in a group of its own before any group that takes it.
+  ownGroupFirst: boolean;
+  catchAllGroups: string[];
+  // Whether the root npm update sets a cooldown, and whether it exempts the package.
   hasCooldown: boolean;
   cooldownExempt: boolean;
 }
 
-export function readDependabot(dependabotYaml: string): DependabotSettings {
-  const lines = readLines(dependabotYaml);
-  const cooldowns = lines.filter((line) => keyValue(line, 'cooldown') !== undefined).length;
-  const exclusions = listsUnder(dependabotYaml, 'exclude', 'cooldown');
+interface Group {
+  name: string;
+  patterns: string[] | undefined;
+  excludePatterns: string[];
+  securityUpdates: boolean;
+  productionOnly: boolean;
+}
+
+function updateEntries(lines: Line[]): Line[][] {
+  const start = lines.findIndex(
+    (line) => line.indent === 0 && keyValue(line, 'updates') !== undefined,
+  );
+  if (start === -1) return [];
+  const entries: Line[][] = [];
+  let itemIndent: number | undefined;
+  for (const line of lines.slice(start + 1)) {
+    if (line.indent === 0 && line.text !== '-') break;
+    if (line.text === '-' && (itemIndent === undefined || line.indent === itemIndent)) {
+      itemIndent = line.indent;
+      entries.push([]);
+    } else {
+      entries.at(-1)?.push(line);
+    }
+  }
+  return entries.filter((entry) => entry.length > 0);
+}
+
+function topLevel(entry: Line[]): { indent: number; value: (key: string) => string | undefined } {
+  const indent = Math.min(...entry.map((line) => line.indent));
   return {
-    hasGroup: listsUnder(dependabotYaml, 'patterns').some((list) =>
-      list.some((p) => matchesPackage(p)),
-    ),
-    hasCooldown: cooldowns > 0,
+    indent,
+    value: (key) =>
+      entry
+        .filter((line) => line.indent === indent)
+        .map((line) => keyValue(line, key))
+        .find((value) => value !== undefined),
+  };
+}
+
+function listIn(lines: Line[], indent: number, key: string): string[] | undefined {
+  const index = lines.findIndex(
+    (line) => line.indent === indent && keyValue(line, key) !== undefined,
+  );
+  if (index === -1) return undefined;
+  return listAt(lines, index, keyValue(lines[index] as Line, key) ?? '');
+}
+
+function coversRoot(entry: Line[]): boolean {
+  const { indent, value } = topLevel(entry);
+  const directory = value('directory');
+  if (directory !== undefined) return ['/', '.', './'].includes(unquote(directory));
+  const directories = listIn(entry, indent, 'directories') ?? [];
+  return directories.some((dir) => dir === '/' || dir.startsWith('/**') || dir.startsWith('**'));
+}
+
+function groupsIn(entry: Line[]): Group[] {
+  const { indent } = topLevel(entry);
+  const start = entry.findIndex(
+    (line) => line.indent === indent && keyValue(line, 'groups') !== undefined,
+  );
+  if (start === -1) return [];
+  const blocks: { name: string; lines: Line[] }[] = [];
+  let groupIndent: number | undefined;
+  for (const line of entry.slice(start + 1)) {
+    if (line.indent <= indent) break;
+    groupIndent ??= line.indent;
+    if (line.indent === groupIndent) {
+      blocks.push({ name: unquote(line.text.replace(/\s*:.*$/, '')), lines: [] });
+    } else {
+      blocks.at(-1)?.lines.push(line);
+    }
+  }
+  return blocks.map(({ name, lines }) => {
+    const propertyIndent = Math.min(...lines.map((line) => line.indent));
+    const property = (key: string) =>
+      lines
+        .filter((line) => line.indent === propertyIndent)
+        .map((line) => keyValue(line, key))
+        .find((value) => value !== undefined);
+    return {
+      name,
+      patterns: listIn(lines, propertyIndent, 'patterns'),
+      excludePatterns: listIn(lines, propertyIndent, 'exclude-patterns') ?? [],
+      securityUpdates: unquote(property('applies-to') ?? '') === 'security-updates',
+      productionOnly: unquote(property('dependency-type') ?? '') === 'production',
+    };
+  });
+}
+
+const takesPackage = (group: Group) =>
+  !group.productionOnly &&
+  !group.excludePatterns.some((pattern) => matchesPackage(pattern)) &&
+  (group.patterns === undefined || group.patterns.some((pattern) => matchesPackage(pattern)));
+
+const isOwnGroup = (group: Group) =>
+  group.patterns !== undefined &&
+  group.patterns.length > 0 &&
+  group.patterns.every((pattern) => !pattern.includes('*') && matchesPackage(pattern));
+
+export function readDependabot(dependabotYaml: string): DependabotSettings {
+  const npm = updateEntries(readLines(dependabotYaml)).filter(
+    (entry) => unquote(topLevel(entry).value('package-ecosystem') ?? '') === 'npm',
+  );
+  const root = npm.filter(coversRoot);
+  const entries = root.length > 0 ? root : npm;
+
+  let ownGroupFirst = entries.length > 0;
+  const catchAllGroups: string[] = [];
+  for (const entry of entries) {
+    const groups = groupsIn(entry).filter(takesPackage);
+    const versionGroups = groups.filter((group) => !group.securityUpdates);
+    const ownIndex = versionGroups.findIndex(isOwnGroup);
+    if (ownIndex !== 0) ownGroupFirst = false;
+    const before = ownIndex === -1 ? versionGroups : versionGroups.slice(0, ownIndex);
+    const security = groups.filter((group) => group.securityUpdates && !isOwnGroup(group));
+    for (const group of [...before, ...security]) {
+      if (!catchAllGroups.includes(group.name)) catchAllGroups.push(group.name);
+    }
+  }
+
+  const cooldowns = entries.map((entry) => {
+    const { indent } = topLevel(entry);
+    const at = entry.findIndex(
+      (line) => line.indent === indent && keyValue(line, 'cooldown') !== undefined,
+    );
+    if (at === -1) return undefined;
+    const block = [];
+    for (const line of entry.slice(at + 1)) {
+      if (line.indent <= indent) break;
+      block.push(line);
+    }
+    const propertyIndent = Math.min(...block.map((line) => line.indent));
+    return listIn(block, propertyIndent, 'exclude') ?? [];
+  });
+  const set = cooldowns.filter((exclude) => exclude !== undefined);
+  return {
+    ownGroupFirst,
+    catchAllGroups,
+    hasCooldown: set.length > 0,
     cooldownExempt:
-      cooldowns > 0 &&
-      exclusions.length === cooldowns &&
-      exclusions.every((list) => list.some((pattern) => matchesPackage(pattern))),
+      set.length > 0 && set.every((exclude) => exclude.some((pattern) => matchesPackage(pattern))),
   };
 }

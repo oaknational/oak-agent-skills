@@ -1,6 +1,8 @@
 import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { PACKAGE_DIR } from './catalogue.ts';
+import { runGit } from './git.ts';
+import { LINKS_DIR, SKILLS_DIR } from './manifest.ts';
 import { OakSkillsError } from './errors.ts';
 import { ExitCode } from './exit-codes.ts';
 import { readOakSkillsConfig, type OakSkillsConfig } from './profiles.ts';
@@ -44,6 +46,59 @@ export interface InitPlan {
   sync: SyncPlan;
 }
 
+const PRETTIER_CONFIGS = [
+  '.prettierrc',
+  '.prettierrc.json',
+  '.prettierrc.json5',
+  '.prettierrc.yaml',
+  '.prettierrc.yml',
+  '.prettierrc.toml',
+  '.prettierrc.js',
+  '.prettierrc.cjs',
+  '.prettierrc.mjs',
+  '.prettierrc.ts',
+  'prettier.config.js',
+  'prettier.config.cjs',
+  'prettier.config.mjs',
+  'prettier.config.ts',
+];
+
+function prettierAdvice(root: string, packageJson: Record<string, unknown>): string[] {
+  const configured =
+    packageJson.prettier !== undefined ||
+    PRETTIER_CONFIGS.some((file) => existsSync(join(root, file)));
+  if (!configured) return [];
+  const ignoreFile = join(root, '.prettierignore');
+  const ignored =
+    existsSync(ignoreFile) &&
+    readFileSync(ignoreFile, 'utf8')
+      .split(/\r?\n/)
+      .some((line) => /^\/?\.agents(?:\/(?:skills\/?)?)?(?:\*\*)?$/.test(line.trim()));
+  return ignored
+    ? []
+    : [
+        "This repository uses Prettier. If your Prettier check covers Markdown or JSON, add .agents/skills/ to .prettierignore, or Prettier rewrites the synced skills and check reports them as edited. Prettier doesn't follow the links in .claude/skills/, so that one line is enough.",
+      ];
+}
+
+function gitIgnores(root: string, path: string): boolean {
+  try {
+    runGit(['check-ignore', '--quiet', '--', path], root);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function ignoredSkillFolderAdvice(root: string): string[] {
+  return [SKILLS_DIR, LINKS_DIR]
+    .filter((dir) => gitIgnores(root, `${dir}/a-skill`))
+    .map(
+      (dir) =>
+        `git ignores ${dir}/, so what sync writes there won't be committed, and check fails in every fresh clone. Change the rule that ignores it in .gitignore. For example, replace ${dir.split('/')[0] ?? dir}/ with ${dir.split('/')[0] ?? dir}/* and add a line holding !${dir}/.`,
+    );
+}
+
 const GROUP_SNIPPET = `    groups:
       oak-agent-skills:
         patterns:
@@ -52,9 +107,15 @@ const GROUP_SNIPPET = `    groups:
 function dependabotAdvice(text: string): string[] {
   const settings = readDependabot(text);
   const advice: string[] = [];
-  if (!settings.hasGroup) {
+  if (!settings.ownGroupFirst) {
     advice.push(
       `.github/dependabot.yml already exists. In its npm update, give the skills package a group of its own, listed before any other group, and check daily:\n${GROUP_SNIPPET}`,
+    );
+  }
+  if (settings.catchAllGroups.length > 0) {
+    const names = settings.catchAllGroups.map((name) => `"${name}"`).join(', ');
+    advice.push(
+      `.github/dependabot.yml's ${names} ${settings.catchAllGroups.length === 1 ? 'group takes' : 'groups take'} the skills package along with other packages, for version or security updates. Exclude it from each, so its updates always arrive on their own:\n        exclude-patterns:\n          - '${PACKAGE_NAME}'`,
     );
   }
   if (settings.hasCooldown && !settings.cooldownExempt) {
@@ -131,6 +192,8 @@ export function planInit(
     }
   }
 
+  toDo.push(...ignoredSkillFolderAdvice(root), ...prettierAdvice(root, packageJson));
+
   const has = (field: string) => {
     const deps = packageJson[field];
     return typeof deps === 'object' && deps !== null && PACKAGE_NAME in deps;
@@ -149,7 +212,7 @@ export function planInit(
   const checklist: ChecklistItem[] = [
     {
       done: false,
-      text: 'The oak-skills GitHub App is installed on this repository, so the sync workflow can push.',
+      text: 'The Oak Agent Skills GitHub App is installed on this repository, so the sync workflow can push.',
     },
     {
       done: false,

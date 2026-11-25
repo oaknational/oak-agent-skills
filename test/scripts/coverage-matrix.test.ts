@@ -87,7 +87,7 @@ describe('collect', () => {
           '.agents/skills/.oak-manifest.json': manifest,
           'pnpm-workspace.yaml':
             "minimumReleaseAge: 10080\nminimumReleaseAgeExclude:\n  - '@oaknational/*'\n",
-          '.github/dependabot.yml': `updates:\n  - cooldown:\n      default-days: 7\n      exclude: ['${PACKAGE}']\n`,
+          '.github/dependabot.yml': `updates:\n  - package-ecosystem: npm\n    cooldown:\n      default-days: 7\n      exclude: ['${PACKAGE}']\n`,
         },
         pulls: [
           {
@@ -209,7 +209,7 @@ describe('collect', () => {
   });
 
   it('flags a Dependabot cooldown without an exemption, in either file name', async () => {
-    const cooldown = 'updates:\n  - cooldown:\n      default-days: 5\n';
+    const cooldown = 'updates:\n  - package-ecosystem: npm\n    cooldown:\n      default-days: 5\n';
     const all = await rows({
       yml: {
         files: {

@@ -78,7 +78,7 @@ describe('oak-skills init in an empty repository', () => {
       include: [],
       exclude: [],
     });
-    expect(result.out).toContain('Checklist:\n- [ ] The oak-skills GitHub App is installed');
+    expect(result.out).toContain('Checklist:\n- [ ] The Oak Agent Skills GitHub App is installed');
     expect(result.out).toContain('- [x] package.json has a packageManager field');
     expect(result.out).not.toContain('To do');
   });
@@ -219,6 +219,44 @@ describe('oak-skills init with a release age', () => {
         "packages:\n  - apps/*\nminimumReleaseAge: 10080\nminimumReleaseAgeExclude:\n  - '@oaknational/*'\n",
     });
     expect((await init(root)).out).not.toContain('pnpm-workspace.yaml holds back');
+  });
+});
+
+describe('oak-skills init with settings that would hold back or bundle the package', () => {
+  it('names the groups that would take the package along with others', async () => {
+    const { root } = repoFrom('single-package', {
+      '.github/dependabot.yml':
+        "version: 2\nupdates:\n  - package-ecosystem: npm\n    directory: /\n    groups:\n      npm:\n        patterns: ['*']\n      npm-security:\n        applies-to: security-updates\n        patterns: ['*']\n",
+    });
+    const { out } = await init(root);
+    expect(out).toContain('give the skills package a group of its own');
+    expect(out).toContain(
+      `.github/dependabot.yml's "npm", "npm-security" groups take the skills package along with other packages`,
+    );
+    expect(out).toContain(
+      "        exclude-patterns:\n            - '@oaknational/oak-agent-skills'",
+    );
+  });
+
+  it('says how to stop git ignoring .claude/skills/', async () => {
+    const { root } = repoFrom('single-package', { '.gitignore': '.claude/\n' });
+    expect((await init(root)).out).toContain(
+      "git ignores .claude/skills/, so what sync writes there won't be committed, and check fails in every fresh clone. Change the rule that ignores it in .gitignore. For example, replace .claude/ with .claude/* and add a line holding !.claude/skills/.",
+    );
+  });
+
+  it('asks for .agents/skills/ in .prettierignore when the repository uses Prettier', async () => {
+    const { root } = repoFrom('single-package', { '.prettierrc': '{}\n' });
+    expect((await init(root)).out).toContain('add .agents/skills/ to .prettierignore');
+  });
+
+  it.each([
+    ['ignores .agents/skills/', { '.prettierrc': '{}\n', '.prettierignore': '.agents/skills/\n' }],
+    ['ignores all of .agents/', { '.prettierrc': '{}\n', '.prettierignore': '/.agents\n' }],
+    ['has no Prettier settings', {}],
+  ])('says nothing about Prettier when the repository %s', async (_label, files) => {
+    const { root } = repoFrom('single-package', files);
+    expect((await init(root)).out).not.toContain('.prettierignore');
   });
 });
 

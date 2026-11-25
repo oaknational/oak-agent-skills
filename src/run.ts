@@ -5,7 +5,7 @@ import { OakSkillsError, UsageError } from './lib/errors.ts';
 import type { GitHub } from './lib/github.ts';
 import type { Prompt } from './lib/prompt.ts';
 import { ExitCode } from './lib/exit-codes.ts';
-import { readPackageInfo } from './lib/package-info.ts';
+import { readPackageInfo, satisfiesRange } from './lib/package-info.ts';
 
 export type { Output } from './commands/command.ts';
 
@@ -36,6 +36,7 @@ export interface RunOptions {
   github?: GitHub;
   prompt?: Prompt;
   now?: Date;
+  nodeVersion?: string;
 }
 
 export async function run(
@@ -80,6 +81,13 @@ export async function run(
       throw new UsageError(
         (error as Error).message,
         `Run "oak-skills ${command.name} --help" for its options.`,
+      );
+    }
+    const { nodeRange } = readPackageInfo();
+    const nodeVersion = options.nodeVersion ?? process.versions.node;
+    if (nodeRange !== undefined && !satisfiesRange(nodeVersion, nodeRange)) {
+      output.err(
+        `Warning: oak-skills supports Node ${nodeRange}, but this is Node ${nodeVersion}. Switch to a supported version before relying on its results.`,
       );
     }
     return await command.run({
