@@ -276,9 +276,17 @@ describe('computeStatus', () => {
       const { report, code } = status(root);
       expect(code).toBe(ExitCode.VersionMismatch);
       expect(report.outOfDate).toEqual([
-        "oakSkills now includes oak-gamma, which isn't synced.",
-        'oak-beta is synced, but oakSkills no longer includes it.',
+        "oak-gamma is now among the skills this repository receives, but isn't synced.",
+        'oak-beta is synced, but no longer among the skills this repository receives.',
       ]);
+    });
+
+    it('lists several skills with "and"', () => {
+      const { root } = synced();
+      setOakSkills(root, { profiles: ['frontend'] });
+      expect(status(root).report.outOfDate).toContain(
+        'oak-alpha and oak-beta are synced, but no longer among the skills this repository receives.',
+      );
     });
 
     it('reports a repository that has never synced', () => {

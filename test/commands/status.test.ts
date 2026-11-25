@@ -54,7 +54,7 @@ describe('oak-skills status', () => {
       [
         'oak-skills 1.2.3. Skills synced from version 1.2.3.',
         'Out of date:',
-        "  oakSkills now includes oak-gamma, which isn't synced.",
+        "  oak-gamma is now among the skills this repository receives, but isn't synced.",
         'Edited:',
         '  .agents/skills/oak-alpha/SKILL.md',
         'Unmanaged:',

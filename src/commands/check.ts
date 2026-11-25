@@ -62,7 +62,7 @@ export const check: Command = {
     problem(
       'Not written by oak-skills',
       report.unmanaged,
-      'move a skill into the central repository with "oak-skills promote --new <name>", or remove it. For a local file such as .DS_Store, add it to .gitignore instead: oak-skills skips whatever git ignores.',
+      'move a skill into the central repository with "oak-skills promote --new <name>", or remove it. For a local file such as .DS_Store, add it to .gitignore instead, because oak-skills skips whatever git ignores. If git already tracks the file, also run git rm --cached <path>.',
     );
     const skills = editedSkills(report.edited);
     problem(
