@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { afterEach, describe, expect, it } from 'vitest';
-import { readPackageInfo } from '../../src/lib/package-info.ts';
+import { readPackageInfo, satisfiesRange } from '../../src/lib/package-info.ts';
 
 const dirs: string[] = [];
 afterEach(() => {
@@ -29,7 +29,16 @@ describe('readPackageInfo', () => {
     expect(readPackageInfo(packageFile('{"name":"x","version":"1.2.3"}'))).toEqual({
       name: 'x',
       version: '1.2.3',
+      nodeRange: undefined,
     });
+  });
+
+  it('reads the supported Node versions from engines', () => {
+    expect(
+      readPackageInfo(packageFile('{"name":"x","version":"1.2.3","engines":{"node":">=24 <25"}}'))
+        .nodeRange,
+    ).toBe('>=24 <25');
+    expect(readPackageInfo().nodeRange).toMatch(/^>=24/);
   });
 
   it.each([
@@ -45,5 +54,23 @@ describe('readPackageInfo', () => {
 
   it('throws on invalid JSON', () => {
     expect(() => readPackageInfo(packageFile('{'))).toThrow(SyntaxError);
+  });
+});
+
+describe('satisfiesRange', () => {
+  it.each([
+    ['24.22.1', '>=24.22.1 <25', true],
+    ['24.30.0', '>=24.22.1 <25', true],
+    ['24.21.9', '>=24.22.1 <25', false],
+    ['25.0.0', '>=24.22.1 <25', false],
+    ['v24.22.1', '>=24.22.1 <25', true],
+    ['24.0.0', '>24', false],
+    ['24.0.1', '>24', true],
+    ['24.0.0', '<=24', true],
+    ['24.0.0', '=24.0.0', true],
+    ['24.0.0', '24.0.1', false],
+    ['20.0.0', '^24 || ^26', true],
+  ])('Node %s against %s is %s', (version, range, expected) => {
+    expect(satisfiesRange(version, range)).toBe(expected);
   });
 });

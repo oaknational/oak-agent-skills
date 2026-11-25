@@ -105,6 +105,33 @@ describe('run', () => {
     expect(result.err).toContain('Run "oak-skills fake --help" for its options.');
   });
 
+  describe('on an unsupported Node version', () => {
+    const runOn = async (nodeVersion: string, args = ['fake']) => {
+      const captured = capture();
+      const code = await run(args, captured.output, { commands: [fakeCommand()], nodeVersion });
+      return { code, err: captured.err() };
+    };
+
+    it.each(['22.20.0', '24.21.0', '25.0.0'])(
+      'warns on Node %s, then runs the command',
+      async (version) => {
+        expect(await runOn(version)).toEqual({
+          code: ExitCode.Ok,
+          err: `Warning: oak-skills supports Node ${String(readPackageInfo().nodeRange)}, but this is Node ${version}. Switch to a supported version before relying on its results.`,
+        });
+      },
+    );
+
+    it.each(['24.22.1', '24.30.2'])('says nothing on Node %s', async (version) => {
+      expect(await runOn(version)).toEqual({ code: ExitCode.Ok, err: '' });
+    });
+
+    it('says nothing for --version or --help', async () => {
+      expect((await runOn('22.20.0', ['--version'])).err).toBe('');
+      expect((await runOn('22.20.0', ['--help'])).err).toBe('');
+    });
+  });
+
   it("prints an OakSkillsError's message and hint and returns its exit code", async () => {
     const result = await runWith(
       ['fake'],
