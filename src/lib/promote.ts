@@ -343,9 +343,18 @@ function git(cwd: string, ...args: string[]): string {
   return runGit(args, cwd);
 }
 
+function readIfPresent(file: string): string {
+  try {
+    return readFileSync(file, 'utf8');
+  } catch (error) {
+    if ((error as { code?: string }).code === 'ENOENT') return '';
+    throw error;
+  }
+}
+
 function addBundleOwners(clone: string, code: string): void {
   const file = join(clone, CODEOWNERS_PATH);
-  const existing = existsSync(file) ? readFileSync(file, 'utf8') : '';
+  const existing = readIfPresent(file);
   const separator = existing === '' || existing.endsWith('\n') ? '' : '\n';
   mkdirSync(dirname(file), { recursive: true });
   writeFileSync(file, `${existing}${separator}/skills/repos/${code}/ ${MAINTAINERS}\n`);
