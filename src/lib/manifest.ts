@@ -26,13 +26,21 @@ export interface Manifest {
 // so none may lead outside .agents/skills/ or a skill folder in the central repository.
 export const SKILL_NAME = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const SKILL_SOURCE = /^skills\/(?:central|repos\/[a-z0-9]{2,4})\/[a-z0-9]+(?:-[a-z0-9]+)*$/;
+const FILE_PATH = /^(?!\.\.?(?:\/|$))[^/\\\0]+(?:\/(?!\.\.?(?:\/|$))[^/\\\0]+)*$/;
+const SHA256 = /^[0-9a-f]{64}$/;
+const LINK_PATH = /^\.claude\/skills\/[a-z0-9]+(?:-[a-z0-9]+)*$/;
+const LINK_TARGET = /^\.\.\/\.\.\/\.agents\/skills\/[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 const isObject = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
 const isStringList = (value: unknown): value is string[] =>
   Array.isArray(value) && value.every((item) => typeof item === 'string');
-const isStringMap = (value: unknown): value is Record<string, string> =>
-  isObject(value) && Object.values(value).every((item) => typeof item === 'string');
+const isChecksumMap = (value: unknown): value is Record<string, string> =>
+  isObject(value) &&
+  Object.entries(value).every(
+    ([path, checksum]) =>
+      FILE_PATH.test(path) && typeof checksum === 'string' && SHA256.test(checksum),
+  );
 
 // A light check of the shape, because consuming repositories don't install a schema validator.
 // schema/manifest.schema.json is the full definition.
@@ -55,14 +63,21 @@ function isManifest(value: unknown): value is Manifest {
         isObject(skill) &&
         typeof skill.source === 'string' &&
         SKILL_SOURCE.test(skill.source) &&
-        isStringMap(skill.files),
+        isChecksumMap(skill.files),
     ) &&
     Array.isArray(symlinks) &&
     symlinks.every(
-      (link) => isObject(link) && typeof link.path === 'string' && typeof link.target === 'string',
+      (link) =>
+        isObject(link) &&
+        typeof link.path === 'string' &&
+        LINK_PATH.test(link.path) &&
+        typeof link.target === 'string' &&
+        LINK_TARGET.test(link.target),
     )
   );
 }
+
+const REWRITE_HINT = `Restore it from git, or delete it and run "oak-skills sync", which writes a new one.`;
 
 export function readManifest(root: string): Manifest | undefined {
   const file = join(root, MANIFEST_PATH);
@@ -73,13 +88,23 @@ export function readManifest(root: string): Manifest | undefined {
   } catch (error) {
     throw new OakSkillsError(`${MANIFEST_PATH} isn't valid JSON: ${(error as Error).message}`, {
       exitCode: ExitCode.Configuration,
-      hint: 'Restore it from git, or run "oak-skills sync" to write it again.',
+      hint: REWRITE_HINT,
     });
   }
   if (!isManifest(parsed)) {
+    const version = isObject(parsed) ? parsed.manifestVersion : undefined;
+    if (typeof version === 'number' && version > 1) {
+      throw new OakSkillsError(
+        `${MANIFEST_PATH} has manifest version ${String(version)}, from a newer oak-skills than this one.`,
+        {
+          exitCode: ExitCode.Configuration,
+          hint: `Install the version of @oaknational/oak-agent-skills that wrote it. Otherwise: ${REWRITE_HINT}`,
+        },
+      );
+    }
     throw new OakSkillsError(`${MANIFEST_PATH} isn't a manifest oak-skills recognises.`, {
       exitCode: ExitCode.Configuration,
-      hint: 'Restore it from git, or run "oak-skills sync" to write it again.',
+      hint: REWRITE_HINT,
     });
   }
   return parsed;

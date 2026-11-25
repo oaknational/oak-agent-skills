@@ -1,14 +1,28 @@
-import { existsSync, lstatSync, readdirSync, readlinkSync } from 'node:fs';
+import { lstatSync, readlinkSync } from 'node:fs';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { PACKAGE_DIR, readCatalogue } from './catalogue.ts';
 import { OakSkillsError } from './errors.ts';
 import { ExitCode } from './exit-codes.ts';
-import { hashFolder } from './hash.ts';
-import { LINKS_DIR, readManifest, SKILLS_DIR, type Manifest } from './manifest.ts';
+import { filesDiffer, hashFolder } from './hash.ts';
+import {
+  LINKS_DIR,
+  MANIFEST_PATH,
+  readManifest,
+  SKILLS_DIR,
+  type Manifest,
+  type ManifestSkill,
+} from './manifest.ts';
 import { readPackageInfo } from './package-info.ts';
-import { readOakSkillsConfig, resolveSkills } from './profiles.ts';
+import { readOakSkillsConfig, resolveSkills, type ResolvedSkill } from './profiles.ts';
 import { findRepositoryRoot, readRootPackageJson } from './root.ts';
+import { linkPath, linkTarget } from './shims.ts';
+import {
+  LINKED_FOLDER_HINT,
+  linkedSkillFolder,
+  readSkillFolders,
+  type SkillFolders,
+} from './skill-folders.ts';
 
 export interface StatusReport {
   root: string;
@@ -18,23 +32,12 @@ export interface StatusReport {
   configProblems: string[];
   // Exit code 2: the committed skills don't match what sync would write now.
   outOfDate: string[];
-  // Exit code 1: managed files or links changed since the last sync.
+  // Exit code 1: synced files, links or the manifest changed since the last sync.
   edited: string[];
   // Exit code 4: things in the skill folders that sync didn't write.
   unmanaged: string[];
-  // Skills whose every file and link matches the manifest.
+  // Skills whose every file and link matches the installed package.
   clean: string[];
-}
-
-function filesChanged(dir: string, recorded: Record<string, string>): string[] {
-  let current: Record<string, string> = {};
-  try {
-    if (lstatSync(dir).isDirectory()) current = hashFolder(dir);
-  } catch {
-    // A missing folder means every recorded file is missing.
-  }
-  const names = new Set([...Object.keys(current), ...Object.keys(recorded)]);
-  return [...names].filter((name) => current[name] !== recorded[name]).sort();
 }
 
 function linkProblem(root: string, path: string, target: string): string | undefined {
@@ -48,29 +51,85 @@ function linkProblem(root: string, path: string, target: string): string | undef
   }
 }
 
-function entries(root: string, dir: string): string[] {
-  const full = join(root, dir);
-  return existsSync(full) ? readdirSync(full).sort() : [];
+function isFolder(path: string): boolean {
+  try {
+    return lstatSync(path).isDirectory();
+  } catch {
+    return false;
+  }
 }
 
-function compareWithManifest(root: string, manifest: Manifest, report: StatusReport): void {
+interface Comparison {
+  root: string;
+  packageDir: string;
+  manifest: Manifest;
+  folders: SkillFolders;
+  wanted: ResolvedSkill[] | undefined;
+  sameVersion: boolean;
+  toolVersion: string;
+}
+
+function expectedFiles(
+  { packageDir, wanted, sameVersion, toolVersion }: Comparison,
+  name: string,
+  skill: ManifestSkill,
+  edited: string[],
+): Record<string, string> {
+  if (!sameVersion) return skill.files;
+  const source = wanted?.find((candidate) => candidate.name === name)?.source ?? skill.source;
+  if (source !== skill.source) {
+    edited.push(`${MANIFEST_PATH} says ${name} comes from ${skill.source}, not ${source}`);
+  }
+  if (!isFolder(join(packageDir, source))) return skill.files;
+  const files = hashFolder(join(packageDir, source));
+  if (filesDiffer(skill.files, files).length > 0) {
+    edited.push(
+      `${MANIFEST_PATH} has checksums for ${name} that don't match version ${toolVersion}`,
+    );
+  }
+  return files;
+}
+
+function compareSkills(comparison: Comparison, report: StatusReport): void {
+  const { root, manifest, folders } = comparison;
+  const linked = new Set<string>();
+  const manifestProblems: string[] = [];
+  for (const link of manifest.symlinks) {
+    const name = link.path.slice(`${LINKS_DIR}/`.length);
+    if (Object.hasOwn(manifest.skills, name) && link.target === linkTarget(name)) linked.add(name);
+    else manifestProblems.push(`${MANIFEST_PATH} lists a link sync doesn't make: ${link.path}`);
+  }
+
   for (const [name, skill] of Object.entries(manifest.skills).sort(([a], [b]) =>
     a < b ? -1 : 1,
   )) {
-    const changed = filesChanged(join(root, SKILLS_DIR, name), skill.files);
-    const link = manifest.symlinks.find((candidate) => candidate.path === `${LINKS_DIR}/${name}`);
-    const brokenLink = link === undefined ? undefined : linkProblem(root, link.path, link.target);
-    for (const file of changed) report.edited.push(`${SKILLS_DIR}/${name}/${file}`);
-    if (brokenLink !== undefined) report.edited.push(brokenLink);
-    if (changed.length === 0 && brokenLink === undefined) report.clean.push(name);
+    const problems: string[] = [];
+    const expected = expectedFiles(comparison, name, skill, problems);
+    const state = folders.read(name);
+    const changed = filesDiffer(state?.files ?? {}, expected);
+    const changes = [
+      ...changed.map((file) => `${SKILLS_DIR}/${name}/${file}`),
+      ...(state?.others ?? []).map(
+        (other) =>
+          `${SKILLS_DIR}/${name}/${other} is a link or special file, which sync never writes`,
+      ),
+      ...problems,
+    ];
+    const brokenLink = linked.has(name)
+      ? linkProblem(root, linkPath(name), linkTarget(name))
+      : undefined;
+    if (brokenLink !== undefined) changes.push(brokenLink);
+    report.edited.push(...changes);
+    if (changes.length === 0) report.clean.push(name);
   }
-  const managedLinks = new Set(manifest.symlinks.map((link) => link.path));
-  for (const entry of entries(root, SKILLS_DIR)) {
+  report.edited.push(...manifestProblems);
+
+  for (const entry of folders.skillEntries) {
     if (entry !== '.oak-manifest.json' && !Object.hasOwn(manifest.skills, entry))
       report.unmanaged.push(`${SKILLS_DIR}/${entry}`);
   }
-  for (const entry of entries(root, LINKS_DIR)) {
-    if (!managedLinks.has(`${LINKS_DIR}/${entry}`)) report.unmanaged.push(`${LINKS_DIR}/${entry}`);
+  for (const entry of folders.linkEntries) {
+    if (!linked.has(entry)) report.unmanaged.push(`${LINKS_DIR}/${entry}`);
   }
 }
 
@@ -78,7 +137,8 @@ export function computeStatus(cwd: string, packageDir: string = PACKAGE_DIR): St
   const root = findRepositoryRoot(cwd);
   const packageJson = readRootPackageJson(root);
   const toolVersion = readPackageInfo(pathToFileURL(join(packageDir, 'package.json'))).version;
-  const manifest = readManifest(root);
+  const linkedFolder = linkedSkillFolder(root);
+  const manifest = linkedFolder === undefined ? readManifest(root) : undefined;
   const report: StatusReport = {
     root,
     toolVersion,
@@ -89,11 +149,15 @@ export function computeStatus(cwd: string, packageDir: string = PACKAGE_DIR): St
     unmanaged: [],
     clean: [],
   };
+  if (linkedFolder !== undefined) {
+    report.configProblems.push(`${linkedFolder} ${LINKED_FOLDER_HINT}`);
+    return report;
+  }
 
-  let wanted: string[] | undefined;
+  let wanted: ResolvedSkill[] | undefined;
   try {
     const config = readOakSkillsConfig(packageJson);
-    wanted = resolveSkills(config, readCatalogue(packageDir)).skills.map((skill) => skill.name);
+    wanted = resolveSkills(config, readCatalogue(packageDir)).skills;
   } catch (error) {
     if (!(error instanceof OakSkillsError) || error.exitCode !== ExitCode.Configuration)
       throw error;
@@ -102,33 +166,40 @@ export function computeStatus(cwd: string, packageDir: string = PACKAGE_DIR): St
     );
   }
 
+  const folders = readSkillFolders(root);
   if (manifest === undefined) {
     report.outOfDate.push('No skills have been synced yet.');
     // Without the manifest, entries named after wanted skills are most likely synced copies, which
     // sync takes back or reports itself, so the fix is to sync rather than to remove them.
-    for (const dir of [SKILLS_DIR, LINKS_DIR]) {
-      for (const entry of entries(root, dir)) {
-        if (wanted?.includes(entry) !== true) report.unmanaged.push(`${dir}/${entry}`);
+    const wantedNames = new Set(wanted?.map((skill) => skill.name));
+    for (const [dir, entries] of [
+      [SKILLS_DIR, folders.skillEntries],
+      [LINKS_DIR, folders.linkEntries],
+    ] as const) {
+      for (const entry of entries) {
+        if (!wantedNames.has(entry)) report.unmanaged.push(`${dir}/${entry}`);
       }
     }
     return report;
   }
 
-  if (manifest.package.version !== toolVersion) {
+  const sameVersion = manifest.package.version === toolVersion;
+  if (!sameVersion) {
     report.outOfDate.push(
       `The skills were synced from version ${manifest.package.version}, but version ${toolVersion} is installed.`,
     );
   }
   if (wanted !== undefined) {
+    const wantedNames = wanted.map((skill) => skill.name);
     const synced = Object.keys(manifest.skills);
-    const missing = wanted.filter((name) => !synced.includes(name));
-    const extra = synced.filter((name) => !wanted.includes(name));
+    const missing = wantedNames.filter((name) => !synced.includes(name));
+    const extra = synced.filter((name) => !wantedNames.includes(name));
     if (missing.length > 0)
       report.outOfDate.push(`oakSkills now includes ${missing.join(', ')}, which isn't synced.`);
     if (extra.length > 0)
       report.outOfDate.push(`${extra.join(', ')} is synced, but oakSkills no longer includes it.`);
   }
-  compareWithManifest(root, manifest, report);
+  compareSkills({ root, packageDir, manifest, folders, wanted, sameVersion, toolVersion }, report);
   return report;
 }
 

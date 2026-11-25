@@ -22,7 +22,7 @@ function editedSkills(paths: readonly string[]): string[] {
   const names = paths.map(
     (path) => /^\.(?:agents|claude)\/skills\/([^/ ]+)/.exec(path)?.[1] ?? path,
   );
-  return [...new Set(names)];
+  return [...new Set(names)].filter((name) => name !== '.oak-manifest.json');
 }
 
 export const check: Command = {
@@ -59,7 +59,7 @@ export const check: Command = {
     problem(
       'Not written by oak-skills',
       report.unmanaged,
-      'move a skill into the central repository with "oak-skills promote --new <name>", or remove it.',
+      'move a skill into the central repository with "oak-skills promote --new <name>", or remove it. For a local file such as .DS_Store, add it to .gitignore instead: oak-skills skips whatever git ignores.',
     );
     const skills = editedSkills(report.edited);
     problem(

@@ -16,3 +16,8 @@ export function hashFile(path: string): string {
 export function hashFolder(dir: string): Record<string, string> {
   return Object.fromEntries(listFolder(dir).files.map((file) => [file, hashFile(join(dir, file))]));
 }
+
+export function filesDiffer(a: Record<string, string>, b: Record<string, string>): string[] {
+  const names = new Set([...Object.keys(a), ...Object.keys(b)]);
+  return [...names].filter((name) => a[name] !== b[name]).sort();
+}

@@ -1,8 +1,10 @@
-import { mkdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { ExitCode } from '../../src/lib/exit-codes.ts';
+import { MANIFEST_PATH, type Manifest } from '../../src/lib/manifest.ts';
 import { computeStatus, statusExitCode } from '../../src/lib/status.ts';
+import { sha256 } from '../../src/lib/hash.ts';
 import { applySync, planSync } from '../../src/lib/sync.ts';
 import { copyPackage, setOakSkills, setPackageVersion } from '../helpers/consumer.ts';
 import { packageFixture } from '../helpers/paths.ts';
@@ -126,6 +128,128 @@ describe('computeStatus', () => {
       ]);
     });
   });
+
+  describe('compared with the installed package', () => {
+    const editManifest = (root: string, change: (manifest: Manifest) => void) => {
+      const file = join(root, MANIFEST_PATH);
+      const manifest = JSON.parse(readFileSync(file, 'utf8')) as Manifest;
+      change(manifest);
+      writeFileSync(file, JSON.stringify(manifest));
+    };
+
+    it('reports a file edited together with its checksum in the manifest', () => {
+      const { root } = synced();
+      writeFileSync(join(root, '.agents/skills/oak-alpha/SKILL.md'), 'edited');
+      editManifest(root, (manifest) => {
+        const skill = manifest.skills['oak-alpha'];
+        if (skill !== undefined) skill.files['SKILL.md'] = sha256('edited');
+      });
+      const { report, code } = status(root);
+      expect(code).toBe(ExitCode.Edited);
+      expect(report.edited).toEqual([
+        '.agents/skills/oak-alpha/SKILL.md',
+        `${MANIFEST_PATH} has checksums for oak-alpha that don't match version 1.2.3`,
+      ]);
+    });
+
+    it('reports a manifest that gives a skill another source', () => {
+      const { root } = synced();
+      editManifest(root, (manifest) => {
+        const skill = manifest.skills['oak-alpha'];
+        if (skill !== undefined) skill.source = 'skills/central/oak-beta';
+      });
+      expect(status(root).report.edited).toEqual([
+        `${MANIFEST_PATH} says oak-alpha comes from skills/central/oak-beta, not skills/central/oak-alpha`,
+      ]);
+    });
+
+    it('reports a link the manifest adds for something that is not a synced skill', () => {
+      const { root } = synced();
+      writeTree(root, { 'elsewhere/SKILL.md': 'x' });
+      symlinkSync('../../elsewhere', join(root, '.claude/skills/oak-extra'));
+      editManifest(root, (manifest) => {
+        manifest.symlinks.push({
+          path: '.claude/skills/oak-extra',
+          target: '../../.agents/skills/oak-extra',
+        });
+      });
+      const { report, code } = status(root);
+      expect(code).toBe(ExitCode.Unmanaged);
+      expect(report.unmanaged).toEqual(['.claude/skills/oak-extra']);
+      expect(report.edited).toEqual([
+        `${MANIFEST_PATH} lists a link sync doesn't make: .claude/skills/oak-extra`,
+      ]);
+    });
+
+    it("reports a manifest link swapped to another skill's folder", () => {
+      const { root } = synced();
+      rmSync(join(root, '.claude/skills/oak-beta'));
+      symlinkSync('../../.agents/skills/oak-alpha', join(root, '.claude/skills/oak-beta'));
+      editManifest(root, (manifest) => {
+        manifest.symlinks = manifest.symlinks.map((link) =>
+          link.path === '.claude/skills/oak-beta'
+            ? { ...link, target: '../../.agents/skills/oak-alpha' }
+            : link,
+        );
+      });
+      const { report } = status(root);
+      expect(report.edited).toEqual([
+        `${MANIFEST_PATH} lists a link sync doesn't make: .claude/skills/oak-beta`,
+      ]);
+      expect(report.unmanaged).toEqual(['.claude/skills/oak-beta']);
+    });
+
+    it('reports a link added inside a skill', () => {
+      const { root } = synced();
+      symlinkSync('../../../package.json', join(root, '.agents/skills/oak-alpha/extra.md'));
+      expect(status(root)).toMatchObject({
+        code: ExitCode.Edited,
+        report: {
+          edited: [
+            '.agents/skills/oak-alpha/extra.md is a link or special file, which sync never writes',
+          ],
+          clean: ['oak-beta'],
+        },
+      });
+    });
+  });
+
+  describe('files git ignores', () => {
+    it('leaves them out, in either skills folder and inside a skill', () => {
+      const { root } = synced();
+      writeTree(root, {
+        '.gitignore': '*.local\n',
+        '.agents/skills/notes.local': 'x',
+        '.claude/skills/notes.local': 'x',
+        '.agents/skills/oak-alpha/notes.local': 'x',
+      });
+      expect(status(root).code).toBe(ExitCode.Ok);
+    });
+
+    it('still reports a file that is committed, even if it matches an ignore rule', () => {
+      const repo = synced();
+      writeTree(repo.root, { '.agents/skills/oak-alpha/notes.local': 'x' });
+      repo.git('add', '--all');
+      repo.git('commit', '--quiet', '--message', 'chore: commit a local file');
+      writeTree(repo.root, { '.gitignore': '*.local\n' });
+      expect(status(repo.root).report.edited).toEqual(['.agents/skills/oak-alpha/notes.local']);
+    });
+  });
+
+  it.each(['.agents/skills', '.claude/skills'])(
+    'exit code 5 when %s is a link to the other skills folder',
+    (linked) => {
+      const { root } = synced();
+      const other = linked === '.agents/skills' ? '.claude/skills' : '.agents/skills';
+      removeTree(join(root, linked));
+      symlinkSync(`../${other}`, join(root, linked));
+      const { report, code } = status(root);
+      expect(code).toBe(ExitCode.Configuration);
+      expect(report.configProblems).toEqual([
+        `${linked} is a link to ../${other}. oak-skills keeps the skills in .agents/skills/ and makes one link per skill in .claude/skills/, so both must be real folders. Remove the link, then run "oak-skills sync".`,
+      ]);
+    },
+  );
 
   describe('exit code 2: out of date', () => {
     it('reports a newer installed version', () => {
