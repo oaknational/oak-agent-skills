@@ -23,7 +23,7 @@ Write the test before the code it tests, one small behaviour at a time. A test y
 Work through the list one behaviour at a time.
 
 1. **Red.** Write one test for the next behaviour, then run it. Check that it fails, and for the reason you expect: read the failure message. A missing import or a syntax error isn't the failure you're looking for.
-2. **Green.** Write the simplest code that makes the test pass. Run the test, then the rest of the test file.
+2. **Green.** Write the simplest code that makes the test pass, and nothing the test does not need. Run the test, then the rest of the test file.
 3. **Refactor.** With every test passing, tidy the code and the tests: remove duplication, improve names, and simplify. Run the tests again.
 4. Cross the behaviour off the list, and add any new cases you've noticed.
 
