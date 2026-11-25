@@ -4,3 +4,4 @@
 # Each consuming repository's bundle in skills/repos/<code>/ also gets its own line, added when its
 # folder is created, so its owners can change later without touching the catch-all.
 # oak-skills validate checks.
+/skills/repos/sbox/ @oaknational/skills-maintainers
