@@ -71,12 +71,12 @@ metadata:
 
 `metadata` takes these keys:
 
-| Key          | Required | Value                                                                                                          |
-| ------------ | -------- | -------------------------------------------------------------------------------------------------------------- |
-| `owner`      | Yes      | The GitHub team that owns the skill, such as `@oaknational/skills-maintainers`                                 |
-| `updated`    | Yes      | The date the skill's files last changed, as `YYYY-MM-DD`. Change it whenever you change any file in the skill. |
-| `deprecated` | No       | The name of the skill that replaces this one. See [deprecating a skill](#deprecate-a-skill).                   |
-| `source`     | No       | Where a vendored skill came from, as `owner/repository@commit`. See [vendoring a skill](#vendor-a-skill).      |
+| Key          | Required | Value                                                                                                                                                       |
+| ------------ | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `owner`      | Yes      | The GitHub team that owns the skill, such as `@oaknational/skills-maintainers`                                                                              |
+| `updated`    | Yes      | The date the skill's files last changed, as `YYYY-MM-DD`. Change it whenever you change any file in the skill. It can't move backwards or be in the future. |
+| `deprecated` | No       | The name of the skill that replaces this one. See [deprecating a skill](#deprecate-a-skill).                                                                |
+| `source`     | No       | Where a vendored skill came from, as `owner/repository@commit`. See [vendoring a skill](#vendor-a-skill).                                                   |
 
 Don't use `allowed-tools`. The Agent Skills specification marks it as experimental, and not every agent supports it.
 
