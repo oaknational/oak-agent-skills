@@ -19,7 +19,9 @@ other interactive learning content. This is where the WCAG 2.2 additions bite ha
 - **Visible focus indicator** on every interactive element (2.4.7), and the focused element is never
   entirely hidden behind sticky headers/overlays (**2.4.11**, new in 2.2); keeping all of it visible
   is 2.4.12 (AAA).
-- Provide a **skip-to-content** link for pages with repeated navigation.
+- Provide a **skip-to-content** link for pages with repeated navigation (2.4.1).
+- **Single-key shortcuts**, using only a letter, number, punctuation or symbol key, can be turned
+  off or remapped, or work only while their component has focus (2.1.4).
 
 ## Pointer, target size, and motion
 
@@ -28,6 +30,10 @@ other interactive learning content. This is where the WCAG 2.2 additions bite ha
 - **Dragging has a tap/click alternative** (**2.5.7**, new) — e.g. drag-and-drop matching questions
   also work by select-then-place.
 - No essential action depends on a device gesture/motion only.
+- **Gestures have a single-pointer alternative** (2.5.1): a pinch, multi-finger or path-based swipe
+  also works with a tap or click.
+- **Actions run on release, not press** (2.5.2), or can be aborted or undone, so a slip doesn't
+  submit a quiz answer.
 
 ## Forms and quizzes
 
@@ -40,10 +46,21 @@ other interactive learning content. This is where the WCAG 2.2 additions bite ha
   the same flow.
 - **Accessible authentication** (**3.3.8**, new): no login step that's a cognitive puzzle.
 - Quiz timers: if timed, make the limit adjustable/extendable (2.2.1), or avoid time limits.
+- **No surprises on focus or input** (3.2.1/3.2.2): focusing a control never navigates or submits,
+  and choosing a quiz option doesn't submit it or move on unless pupils are told first.
+- **Instructions don't rely on the senses alone** (1.3.3): not "the round button" or "the answer
+  on the right" without a label.
+
+## Tooltips and pop-ups
+
+- Content that appears on hover or focus (1.4.13) can be dismissed without moving the pointer or
+  focus, for example with Escape, stays visible while the pointer moves over it, and stays until
+  it's dismissed or no longer relevant.
 
 ## Colour, contrast, and zoom
 
-- Text **4.5:1** (large text/UI/graphics **3:1**); **Oak's target is 7:1**.
+- Text **4.5:1** (large text/UI/graphics **3:1**); **Oak's target is 7:1**, and 4.5:1 for large
+  text (1.4.6).
 - **Non-text contrast 3:1** for control boundaries, focus rings, and meaningful graphics (1.4.11).
 - Usable at **200% zoom**, and **reflows at 320px wide without scrolling in two directions**
   (1.4.4/1.4.10); never set `user-scalable=no`.
