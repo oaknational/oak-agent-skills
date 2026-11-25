@@ -1,5 +1,18 @@
 # @oaknational/oak-agent-skills
 
+## 0.3.0
+
+### Minor Changes
+
+- 5e2ee3d: `oak-skills init --profile <name>` adds a profile to `base` in the `oakSkills` settings it writes, such as `--profile frontend`. Repeat it for more than one profile. An unknown name stops `init` with exit code 5 and changes nothing.
+
+### Patch Changes
+
+- fbaa659: `oak-skills init` no longer asks for a daily Dependabot schedule: the skills package's own group follows the repository's existing schedule. Messages from `init`, `check` and `status` now join names with "and", describe skills the repository now receives or no longer receives in the same words whether a profile or the settings changed, and say to run `git rm --cached` when git already tracks a local file such as `.DS_Store`.
+- 5e2ee3d: `oak-skills init`'s checklist now includes an `engines.node` field in `package.json`, which the workflows read to set up Node.
+- 4636450: `oak-skills promote --new` now says when `oakSkills.bundle` names a bundle the installed package doesn't have yet, and how to propose its first skill with `--bundle`. When a name ends with the repository's code, its rename hint moves the code to the front. A pull request's branch and changeset now share one timestamp.
+- 4636450: `oak-skills promote --new --bundle <code>` now adds the code to the central repository's `cspell-words.txt`, so the pull request's spelling check passes.
+
 ## 0.2.0
 
 ### Minor Changes
