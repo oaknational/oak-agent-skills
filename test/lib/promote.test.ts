@@ -77,6 +77,7 @@ const editAlpha = (
 const options = (overrides: Partial<PromoteOptions> = {}): PromoteOptions => ({
   name: 'oak-alpha',
   isNew: false,
+  bundle: undefined,
   bump: 'patch',
   message: 'Say to read the guide first',
   dryRun: false,
@@ -522,6 +523,225 @@ describe('promote --new, 6.8', () => {
     await expect(run(repo.root, github, { name: 'owa-x', isNew: true }).promise).rejects.toThrow(
       'The central repository already has skills/repos/owa/owa-x.',
     );
+  });
+});
+
+describe('promote --new --bundle, the first skill of a new bundle', () => {
+  const draft = (repo: TempRepo, name = 'ora-lint') => {
+    writeTree(repo.root, {
+      [`.agents/skills/${name}/SKILL.md`]: skillText({ name }),
+    });
+  };
+  const noBundle = () => consumer(packageFixture, { profiles: ['base'] });
+
+  it('proposes it under skills/repos/<code>/ with a CODEOWNERS line for the new folder', async () => {
+    const repo = noBundle();
+    draft(repo);
+    const remote = central();
+    const github = fakeGitHub(remote);
+    const result = await run(repo.root, github, {
+      name: 'ora-lint',
+      isNew: true,
+      bundle: 'ora',
+      message: 'Add lint guidance',
+    }).promise;
+    const head = github.pullRequests[0]?.head ?? '';
+    expect(result.newBundle).toBe('ora');
+    expect(remote.read(head, 'skills/repos/ora/ora-lint/SKILL.md')).toContain('name: ora-lint');
+    expect(remote.read(head, '.github/CODEOWNERS')).toBe(
+      '/skills/repos/ora/ @oaknational/skills-maintainers',
+    );
+    expect(github.pullRequests[0]?.body).toContain('The first skill of a new bundle, `ora`.');
+    expect(existsSync(join(repo.root, '.agents/skills/ora-lint'))).toBe(false);
+  });
+
+  it('adds the line to the end of an existing CODEOWNERS', async () => {
+    const repo = noBundle();
+    draft(repo);
+    const remote = central();
+    remote.commitToMain(
+      { '.github/CODEOWNERS': '* @oaknational/skills-maintainers' },
+      'chore: owners',
+    );
+    const github = fakeGitHub(remote);
+    await run(repo.root, github, { name: 'ora-lint', isNew: true, bundle: 'ora' }).promise;
+    expect(remote.read(github.pullRequests[0]?.head ?? '', '.github/CODEOWNERS')).toBe(
+      '* @oaknational/skills-maintainers\n/skills/repos/ora/ @oaknational/skills-maintainers',
+    );
+  });
+
+  it.each(['oak', 'longer', 'ORA', 'x', 'or4'])(
+    'rejects --bundle %s with the usage exit code',
+    async (code) => {
+      const repo = noBundle();
+      draft(repo);
+      await expect(
+        run(repo.root, fakeGitHub(central()), { name: 'ora-lint', isNew: true, bundle: code })
+          .promise,
+      ).rejects.toThrow(
+        expect.objectContaining({
+          message: `--bundle "${code}" isn't a repository code. Codes are two to four lowercase letters, such as "owa", and "oak" is reserved.`,
+          exitCode: ExitCode.Usage,
+        }),
+      );
+    },
+  );
+
+  it('stops when the installed package already has that bundle', async () => {
+    const repo = noBundle();
+    draft(repo, 'owa-x');
+    await expect(
+      run(repo.root, fakeGitHub(central()), { name: 'owa-x', isNew: true, bundle: 'owa' }).promise,
+    ).rejects.toThrow(
+      expect.objectContaining({
+        message: 'The installed package already has the "owa" bundle.',
+        hint: expect.stringContaining('Set oakSkills.bundle to "owa"') as unknown,
+      }),
+    );
+  });
+
+  it('stops when --bundle differs from the bundle oakSkills names', async () => {
+    const repo = consumer();
+    draft(repo, 'ora-x');
+    await expect(
+      run(repo.root, fakeGitHub(central()), { name: 'ora-x', isNew: true, bundle: 'ora' }).promise,
+    ).rejects.toThrow(
+      expect.objectContaining({
+        message: 'oakSkills already names the bundle "owa", so --bundle "ora" doesn\'t apply.',
+        exitCode: ExitCode.Usage,
+      }),
+    );
+  });
+
+  it('accepts --bundle when it matches the bundle oakSkills names', async () => {
+    const repo = consumer();
+    draft(repo, 'owa-x');
+    const github = fakeGitHub(central());
+    const result = await run(repo.root, github, { name: 'owa-x', isNew: true, bundle: 'owa' })
+      .promise;
+    expect(result.newBundle).toBeUndefined();
+    expect(github.pullRequests[0]?.body).toContain('A new skill.');
+  });
+
+  it('suggests --bundle when oakSkills names no bundle', async () => {
+    const repo = noBundle();
+    draft(repo);
+    await expect(
+      run(repo.root, fakeGitHub(central()), { name: 'ora-lint', isNew: true }).promise,
+    ).rejects.toThrow(
+      expect.objectContaining({ hint: expect.stringContaining('pass --bundle') as unknown }),
+    );
+  });
+
+  it('stops when the central repository already has the new bundle', async () => {
+    const repo = noBundle();
+    draft(repo);
+    const remote = central();
+    const github = fakeGitHub(remote, {
+      clone: (_repo, dir) => {
+        spawnSync('git', ['clone', '--quiet', remote.remote, dir], { env: isolatedGitEnv });
+        writeTree(dir, { 'skills/repos/ora/ora-lint/SKILL.md': 'already here' });
+      },
+    });
+    await expect(
+      run(repo.root, github, { name: 'ora-lint', isNew: true, bundle: 'ora' }).promise,
+    ).rejects.toThrow('The central repository already has skills/repos/ora/ora-lint.');
+  });
+});
+
+describe('promote --new with drafts in both skills folders', () => {
+  it('stops, and removes nothing, when the two drafts differ', async () => {
+    const repo = consumer();
+    writeTree(repo.root, {
+      '.agents/skills/owa-x/SKILL.md': skillText({ name: 'owa-x' }),
+      '.claude/skills/owa-x/SKILL.md': skillText({ name: 'owa-x', description: 'Another draft.' }),
+    });
+    const github = fakeGitHub(central());
+    await expect(run(repo.root, github, { name: 'owa-x', isNew: true }).promise).rejects.toThrow(
+      'There are different drafts of owa-x in .agents/skills/ and .claude/skills/, and promote proposes only one.',
+    );
+    expect(github.cloned).toBe(0);
+    expect(existsSync(join(repo.root, '.agents/skills/owa-x/SKILL.md'))).toBe(true);
+    expect(existsSync(join(repo.root, '.claude/skills/owa-x/SKILL.md'))).toBe(true);
+  });
+
+  it('proposes one copy and removes both when the drafts are the same', async () => {
+    const repo = consumer();
+    const text = skillText({ name: 'owa-x' });
+    writeTree(repo.root, {
+      '.agents/skills/owa-x/SKILL.md': text,
+      '.claude/skills/owa-x/SKILL.md': text,
+    });
+    await run(repo.root, fakeGitHub(central()), { name: 'owa-x', isNew: true }).promise;
+    expect(existsSync(join(repo.root, '.agents/skills/owa-x'))).toBe(false);
+    expect(existsSync(join(repo.root, '.claude/skills/owa-x'))).toBe(false);
+  });
+});
+
+describe('promote and GitHub failures', () => {
+  const branches = (remote: CentralRemote) =>
+    execFileSync('git', ['ls-remote', '--heads', remote.remote, 'promote/*'], {
+      env: isolatedGitEnv,
+      encoding: 'utf8',
+    }).trim();
+
+  it('checks gh before asking anything', async () => {
+    const repo = consumer();
+    editAlpha(repo.root);
+    const asked: string[] = [];
+    const github = fakeGitHub(central(), { problem: () => 'gh is not signed in.' });
+    await expect(
+      promote(
+        {
+          cwd: repo.root,
+          github,
+          prompt: (question) => {
+            asked.push(question);
+            return Promise.resolve('');
+          },
+          packageDir: packageFixture,
+          now: NOW,
+          log: () => undefined,
+        },
+        options({ message: undefined, bump: undefined }),
+      ),
+    ).rejects.toThrow('gh is not signed in.');
+    expect(asked).toEqual([]);
+  });
+
+  it('pushes nothing when the pull request template cannot be read', async () => {
+    const repo = consumer();
+    editAlpha(repo.root);
+    const remote = central();
+    const github = fakeGitHub(remote, {
+      pullRequestTemplate: () => {
+        throw new Error('gh api failed: HTTP 502');
+      },
+    });
+    await expect(run(repo.root, github).promise).rejects.toThrow('HTTP 502');
+    expect(github.cloned).toBe(0);
+    expect(branches(remote)).toBe('');
+  });
+
+  it('deletes its branch again, and changes nothing here, when the pull request fails', async () => {
+    const repo = consumer();
+    editAlpha(repo.root);
+    const remote = central();
+    const github = fakeGitHub(remote, {
+      createPullRequest: () => {
+        throw new Error('gh pr create failed: HTTP 502');
+      },
+    });
+    await expect(run(repo.root, github).promise).rejects.toThrow(
+      expect.objectContaining({
+        message: expect.stringContaining(
+          "couldn't open the pull request: gh pr create failed",
+        ) as unknown,
+        hint: expect.stringContaining('It deleted the branch again') as unknown,
+      }),
+    );
+    expect(branches(remote)).toBe('');
+    expect(repo.git('status', '--porcelain')).toBe(`M ${ALPHA}`);
   });
 });
 

@@ -3,17 +3,19 @@ import {
   cpSync,
   existsSync,
   lstatSync,
+  mkdirSync,
   mkdtempSync,
   readFileSync,
   rmSync,
   writeFileSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { basename, join, relative } from 'node:path';
-import { PACKAGE_DIR } from './catalogue.ts';
+import { basename, dirname, join, relative } from 'node:path';
+import { PACKAGE_DIR, readCatalogue } from './catalogue.ts';
 import { OakSkillsError } from './errors.ts';
 import { listFolder } from './files.ts';
 import { ExitCode } from './exit-codes.ts';
+import { hashFolder } from './hash.ts';
 import { runGit } from './git.ts';
 import { CENTRAL_REPO, type GitHub } from './github.ts';
 import { LINKS_DIR, readManifest, SKILLS_DIR } from './manifest.ts';
@@ -22,6 +24,8 @@ import type { Prompt } from './prompt.ts';
 import { findRepositoryRoot, readRootPackageJson } from './root.ts';
 import { computeStatus } from './status.ts';
 import { applySync, planSync } from './sync.ts';
+import { CODEOWNERS_PATH, MAINTAINERS } from './validate/codeowners.ts';
+import { BUNDLE_CODE } from './validate/central-repo.ts';
 
 export type Bump = 'patch' | 'minor' | 'major';
 export const BUMPS: readonly Bump[] = ['patch', 'minor', 'major'];
@@ -37,6 +41,7 @@ Until version 1.0.0, a major change is recorded as minor, but its title still ma
 export interface PromoteOptions {
   name: string;
   isNew: boolean;
+  bundle: string | undefined;
   bump: Bump | undefined;
   message: string | undefined;
   dryRun: boolean;
@@ -58,6 +63,7 @@ export interface PromoteResult {
   change: string;
   url: string | undefined;
   conflicted: boolean;
+  newBundle: string | undefined;
 }
 
 const fail = (message: string, hint?: string) =>
@@ -188,6 +194,7 @@ interface Located {
   // Folders in this repository holding the change.
   localFolders: string[];
   change: string;
+  newBundle: string | undefined;
 }
 
 function locateEdit(root: string, packageDir: string, name: string): Located {
@@ -235,21 +242,57 @@ function locateEdit(root: string, packageDir: string, name: string): Located {
     source: skill.source,
     localFolders: [join(root, SKILLS_DIR, name)],
     change,
+    newBundle: undefined,
   };
 }
 
-function locateDraft(root: string, packageDir: string, name: string): Located {
-  const config = readOakSkillsConfig(readRootPackageJson(root));
-  if (config.bundle === undefined) {
+function bundleFor(
+  packageDir: string,
+  configured: string | undefined,
+  requested: string | undefined,
+) {
+  if (configured !== undefined) {
+    if (requested !== undefined && requested !== configured) {
+      throw new OakSkillsError(
+        `oakSkills already names the bundle "${configured}", so --bundle "${requested}" doesn't apply.`,
+        { exitCode: ExitCode.Usage, hint: 'Leave out --bundle.' },
+      );
+    }
+    return { code: configured, isNew: false };
+  }
+  if (requested === undefined) {
     throw fail(
       "promote --new proposes a skill for this repository's bundle, but oakSkills names no bundle.",
-      'Ask the skills maintainers for a repository code, then set oakSkills.bundle in package.json.',
+      'For the first skill of a new bundle, pass --bundle with the repository code the skills maintainers gave you. Otherwise set oakSkills.bundle in package.json.',
     );
   }
-  if (!name.startsWith(`${config.bundle}-`)) {
+  if (!BUNDLE_CODE.test(requested) || requested === 'oak') {
+    throw new OakSkillsError(
+      `--bundle "${requested}" isn't a repository code. Codes are two to four lowercase letters, such as "owa", and "oak" is reserved.`,
+      { exitCode: ExitCode.Usage },
+    );
+  }
+  if (readCatalogue(packageDir).bundles.has(requested)) {
     throw fail(
-      `${name} must start with "${config.bundle}-", this repository's code, to join its bundle.`,
-      `Rename the folder and the name in its SKILL.md, for example to ${config.bundle}-${name.replace(/^[a-z0-9]+-/, '')}.`,
+      `The installed package already has the "${requested}" bundle.`,
+      `Set oakSkills.bundle to "${requested}" in package.json and run "oak-skills sync", then run promote --new without --bundle.`,
+    );
+  }
+  return { code: requested, isNew: true };
+}
+
+function locateDraft(
+  root: string,
+  packageDir: string,
+  name: string,
+  requestedBundle: string | undefined,
+): Located {
+  const config = readOakSkillsConfig(readRootPackageJson(root));
+  const bundle = bundleFor(packageDir, config.bundle, requestedBundle);
+  if (!name.startsWith(`${bundle.code}-`)) {
+    throw fail(
+      `${name} must start with "${bundle.code}-", this repository's code, to join its bundle.`,
+      `Rename the folder and the name in its SKILL.md, for example to ${bundle.code}-${name.replace(/^[a-z0-9]+-/, '')}.`,
     );
   }
   const synced = readManifest(root)?.skills;
@@ -265,6 +308,17 @@ function locateDraft(root: string, packageDir: string, name: string): Located {
   }
   if (!existsSync(join(draft, 'SKILL.md')))
     throw fail(`The draft at ${relative(root, draft)} has no SKILL.md.`);
+  const [first, second] = folders;
+  if (
+    first !== undefined &&
+    second !== undefined &&
+    JSON.stringify(hashFolder(first)) !== JSON.stringify(hashFolder(second))
+  ) {
+    throw fail(
+      `There are different drafts of ${name} in ${SKILLS_DIR}/ and ${LINKS_DIR}/, and promote proposes only one.`,
+      `Keep the one you want to propose, delete the other, then run promote again.`,
+    );
+  }
   const status = computeStatus(root, packageDir);
   if (status.configProblems.length > 0 || status.outOfDate.length > 0) {
     throw fail(
@@ -278,14 +332,32 @@ function locateDraft(root: string, packageDir: string, name: string): Located {
   return {
     root,
     version: status.toolVersion,
-    source: `skills/repos/${config.bundle}/${name}`,
+    source: `skills/repos/${bundle.code}/${name}`,
     localFolders: folders,
     change: `New skill files:\n${files}`,
+    newBundle: bundle.isNew ? bundle.code : undefined,
   };
 }
 
 function git(cwd: string, ...args: string[]): string {
   return runGit(args, cwd);
+}
+
+function readIfPresent(file: string): string {
+  try {
+    return readFileSync(file, 'utf8');
+  } catch (error) {
+    if ((error as { code?: string }).code === 'ENOENT') return '';
+    throw error;
+  }
+}
+
+function addBundleOwners(clone: string, code: string): void {
+  const file = join(clone, CODEOWNERS_PATH);
+  const existing = readIfPresent(file);
+  const separator = existing === '' || existing.endsWith('\n') ? '' : '\n';
+  mkdirSync(dirname(file), { recursive: true });
+  writeFileSync(file, `${existing}${separator}/skills/repos/${code}/ ${MAINTAINERS}\n`);
 }
 
 // Takes the diff against the skill at the release tag the copy came from, then applies it to a
@@ -334,8 +406,19 @@ export async function promote(
   runGit(['--version'], ctx.cwd);
   const root = findRepositoryRoot(ctx.cwd);
   const located = options.isNew
-    ? locateDraft(root, packageDir, options.name)
+    ? locateDraft(root, packageDir, options.name, options.bundle)
     : locateEdit(root, packageDir, options.name);
+
+  if (!options.dryRun) {
+    const problem = ctx.github.problem();
+    if (problem !== undefined) throw fail(problem);
+    if (!ctx.github.canPush(CENTRAL_REPO)) {
+      throw fail(
+        `You don't have write access to ${CENTRAL_REPO}, so promote can't open a pull request there.`,
+        'Ask the skills maintainers for access, or raise a skill-feedback issue describing the change.',
+      );
+    }
+  }
 
   const reason = await askReason(ctx, options);
   const bump = await askBump(ctx, options, options.isNew ? 'minor' : 'patch');
@@ -349,18 +432,18 @@ export async function promote(
       },
     );
   }
-  if (options.dryRun)
-    return { title, bump, change: located.change, url: undefined, conflicted: false };
-
-  const problem = ctx.github.problem();
-  if (problem !== undefined) throw fail(problem);
-  if (!ctx.github.canPush(CENTRAL_REPO)) {
-    throw fail(
-      `You don't have write access to ${CENTRAL_REPO}, so promote can't open a pull request there.`,
-      'Ask the skills maintainers for access, or raise a skill-feedback issue describing the change.',
-    );
+  if (options.dryRun) {
+    return {
+      title,
+      bump,
+      change: located.change,
+      url: undefined,
+      conflicted: false,
+      newBundle: located.newBundle,
+    };
   }
 
+  const template = ctx.github.pullRequestTemplate(CENTRAL_REPO);
   const work = mkdtempSync(join(tmpdir(), 'oak-skills-promote-'));
   try {
     const clone = join(work, 'oak-agent-skills');
@@ -375,6 +458,7 @@ export async function promote(
       if (existsSync(join(clone, located.source))) {
         throw fail(`The central repository already has ${located.source}.`);
       }
+      if (located.newBundle !== undefined) addBundleOwners(clone, located.newBundle);
       cpSync(located.localFolders[0] ?? '', join(clone, located.source), { recursive: true });
     } else {
       conflicted = applyEdit(clone, work, located);
@@ -394,28 +478,40 @@ export async function promote(
     const origin = originatingRepo(root);
     git(clone, 'add', '--all');
     git(clone, 'commit', '--quiet', '--message', title, '--trailer', `Originating-Repo: ${origin}`);
-    git(clone, 'push', '--quiet', '--set-upstream', 'origin', branch);
-
     const note = conflicted
       ? "> [!WARNING]\n> This change didn't apply cleanly to `main`, because the skill has changed since the version it was edited from. The conflict markers are committed; resolve them before marking this ready for review."
-      : options.isNew
-        ? '> [!NOTE]\n> A new skill. Check its frontmatter, add a CODEOWNERS line if its repository has no folder yet, and run `pnpm readme:skills`.'
-        : undefined;
-    const body = fillTemplate(ctx.github.pullRequestTemplate(CENTRAL_REPO), {
-      reason,
-      skillPath: located.source,
-      origin,
-      note,
-    });
-    const url = ctx.github.createPullRequest({
-      repo: CENTRAL_REPO,
-      cwd: clone,
-      base: 'main',
-      head: branch,
-      title,
-      body,
-      draft: conflicted,
-    });
+      : located.newBundle !== undefined
+        ? `> [!NOTE]\n> The first skill of a new bundle, \`${located.newBundle}\`. promote added a CODEOWNERS line for \`skills/repos/${located.newBundle}/\` naming the skills maintainers: add the repository's own team to it. Check the skill's frontmatter, and run \`pnpm readme:skills\`.`
+        : options.isNew
+          ? '> [!NOTE]\n> A new skill. Check its frontmatter, and run `pnpm readme:skills`.'
+          : undefined;
+    const body = fillTemplate(template, { reason, skillPath: located.source, origin, note });
+    git(clone, 'push', '--quiet', '--set-upstream', 'origin', branch);
+    let url: string;
+    try {
+      url = ctx.github.createPullRequest({
+        repo: CENTRAL_REPO,
+        cwd: clone,
+        base: 'main',
+        head: branch,
+        title,
+        body,
+        draft: conflicted,
+      });
+    } catch (error) {
+      let removed = true;
+      try {
+        git(clone, 'push', '--quiet', 'origin', '--delete', branch);
+      } catch {
+        removed = false;
+      }
+      throw fail(
+        `promote pushed ${branch}, but couldn't open the pull request: ${(error as Error).message}`,
+        removed
+          ? 'It deleted the branch again, and changed nothing here. Run promote again when GitHub is reachable.'
+          : `Delete the branch ${branch} in ${CENTRAL_REPO}, then run promote again. Nothing here changed.`,
+      );
+    }
 
     // Restore this repository, so its own pull request passes "oak-skills check". The change
     // arrives with the next release.
@@ -424,7 +520,7 @@ export async function promote(
     } else {
       applySync(planSync(root, packageDir));
     }
-    return { title, bump, change: located.change, url, conflicted };
+    return { title, bump, change: located.change, url, conflicted, newBundle: located.newBundle };
   } finally {
     rmSync(work, { recursive: true, force: true });
   }

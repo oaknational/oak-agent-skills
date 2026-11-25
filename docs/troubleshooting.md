@@ -118,6 +118,10 @@ You'll miss every fix in the meantime, so raise a `skill-feedback` issue saying 
 | No release tag                                            | The central repository has no `v<version>` tag for your installed version. Tell the skills maintainers.                                                                             |
 | The change couldn't be applied                            | The skill was removed or moved on `main` since your version. Raise a `skill-feedback` issue describing the change instead.                                                          |
 | The title would be too long                               | Give a shorter reason with `--message`.                                                                                                                                             |
+| oakSkills names no bundle                                 | For your repository's first skill, pass `--bundle <code>` with the code the skills maintainers gave you.                                                                            |
+| The installed package already has that bundle             | Set `oakSkills.bundle` to that code, run `oak-skills sync`, then promote without `--bundle`.                                                                                        |
+| Different drafts in both skills folders                   | Keep the draft you want to propose, delete the other, and promote again.                                                                                                            |
+| Couldn't open the pull request                            | `promote` deleted the branch it pushed, so run it again once GitHub is reachable. If it says it couldn't, delete the `promote/` branch in the central repository first.             |
 
 If the merge conflicted, `promote` still opens the pull request, as a draft with the conflict marked, and restores your copy. Resolve the conflict in the pull request.
 
