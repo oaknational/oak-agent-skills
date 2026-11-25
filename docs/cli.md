@@ -21,7 +21,7 @@ minimumReleaseAgeExclude:
   - '@oaknational/oak-agent-skills'
 ```
 
-Do this before installing. pnpm holds back versions published too recently, even when no release age is set in pnpm 11. Without the exemption, `pnpm add` installs the 0.0.0 placeholder, which has no `oak-skills` command, and `pnpm exec` refuses to run while the lockfile holds a version that's too new. If the repository already exempts `'@oaknational/*'`, there's nothing to add.
+Do this before installing. pnpm holds back versions published too recently, even when no release age is set in pnpm 11. Without the exemption, `pnpm add` installs an older version for the first week after each release, and `pnpm exec` refuses to run while the lockfile holds a version that's too new. If the repository already exempts `'@oaknational/*'`, there's nothing to add.
 
 Then add the package as a dev dependency at the repository root, and run `init`:
 
@@ -41,10 +41,18 @@ In a pnpm workspace whose `pnpm-workspace.yaml` lists packages, add `--workspace
 2. writes `CLAUDE.md` holding `@AGENTS.md`, so Claude Code reads the same file;
 3. writes two workflows: `.github/workflows/oak-skills-check.yml`, which runs `oak-skills check` on every pull request, and `.github/workflows/oak-skills-sync.yml`, which syncs the skills on Dependabot's update pull requests;
 4. writes `.github/dependabot.yml`, checking npm daily with the skills package in a group of its own;
-5. adds `oakSkills` to the root `package.json`, with the `base` profile and the bundle you named;
+5. adds `oakSkills` to the root `package.json`, with the `base` profile, any profiles you named with `--profile`, and the bundle you named;
 6. runs the first sync.
 
 Run it with `--dry-run` first to see what it would do without changing anything.
+
+| Option             | What it does                                                                                                     |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------- |
+| `--profile <name>` | Also receives this profile, on top of `base`, such as `--profile frontend`. Repeat it for more than one profile. |
+| `--bundle <code>`  | Receives your repository's bundle of skills, such as `--bundle owa`.                                             |
+| `--dry-run`        | Shows what `init` would do, and changes nothing.                                                                 |
+
+The options only apply when `package.json` has no `oakSkills` settings yet. Otherwise `init` leaves the settings alone, warns if an option differs from them, and you change them by hand.
 
 ### Files you already have
 
@@ -65,6 +73,7 @@ When a file already exists, `init` leaves it alone and prints what to add to it 
 - The organisation's Oak Agent Skills GitHub App is installed on the repository. The sync workflow pushes with its token, so that required checks run again on the sync commit.
 - The organisation Dependabot secrets `OAK_SKILLS_APP_CLIENT_ID` and `OAK_SKILLS_APP_KEY` are available to the repository.
 - `package.json` has a `packageManager` field naming pnpm, which the workflows use to install the right version.
+- `package.json` has an `engines.node` field, which the workflows read to set up Node.
 - `oak-skills check` is a required status check, so an edited or out-of-date skill can't merge.
 
 Then review and commit what `init` wrote, including `.agents/skills/` and `.claude/skills/`, and fill in `AGENTS.md` with your team.

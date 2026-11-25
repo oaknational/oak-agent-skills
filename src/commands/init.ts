@@ -7,12 +7,26 @@ import type { Command } from './command.ts';
 export const init: Command = {
   name: 'init',
   summary: 'Set up this repository to receive Oak skills. Only creates what is missing.',
-  usage: 'oak-skills init [--bundle <code>] [--dry-run]',
-  options: { bundle: { type: 'string' }, 'dry-run': { type: 'boolean' } },
+  usage: 'oak-skills init [--profile <name>]... [--bundle <code>] [--dry-run]',
+  options: {
+    profile: { type: 'string', multiple: true },
+    bundle: { type: 'string' },
+    'dry-run': { type: 'boolean' },
+  },
   run: ({ cwd, values, output, packageDir }) => {
     const dryRun = values['dry-run'] === true;
     const bundle = typeof values.bundle === 'string' ? values.bundle : undefined;
-    const plan = planInit(cwd, bundle === undefined ? {} : { bundle }, packageDir);
+    const profiles = Array.isArray(values.profile)
+      ? values.profile.filter((name) => typeof name === 'string')
+      : undefined;
+    const plan = planInit(
+      cwd,
+      {
+        ...(bundle === undefined ? {} : { bundle }),
+        ...(profiles === undefined ? {} : { profiles }),
+      },
+      packageDir,
+    );
     if (!dryRun) applyInit(plan);
 
     const verb = (done: string, would: string) => (dryRun ? would : done);
