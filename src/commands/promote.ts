@@ -11,9 +11,10 @@ export const promote: Command = {
   summary:
     'Send a local edit to a skill, or a new skill for this repository, to the central repository as a pull request.',
   usage:
-    'oak-skills promote <name> [--new] [--bump <patch|minor|major>] [--message <text>] [--dry-run]',
+    'oak-skills promote <name> [--new [--bundle <code>]] [--bump <patch|minor|major>] [--message <text>] [--dry-run]',
   options: {
     new: { type: 'boolean' },
+    bundle: { type: 'string' },
     bump: { type: 'string' },
     message: { type: 'string' },
     'dry-run': { type: 'boolean' },
@@ -33,6 +34,13 @@ export const promote: Command = {
         'For example: oak-skills promote oak-tdd',
       );
     }
+    const bundle = typeof values.bundle === 'string' ? values.bundle : undefined;
+    if (bundle !== undefined && values.new !== true) {
+      throw new UsageError(
+        '--bundle only goes with --new, to propose the first skill of a new bundle.',
+        'For example: oak-skills promote ora-lint-rules --new --bundle ora',
+      );
+    }
     const bump = values.bump;
     if (bump !== undefined && !(BUMPS as readonly unknown[]).includes(bump)) {
       throw new UsageError(`--bump must be patch, minor or major, not "${String(bump)}".`);
@@ -50,6 +58,7 @@ export const promote: Command = {
       {
         name,
         isNew: values.new === true,
+        bundle,
         bump: bump as Bump | undefined,
         message: typeof values.message === 'string' ? values.message : undefined,
         dryRun,
@@ -61,6 +70,11 @@ export const promote: Command = {
       output.out('');
       output.out(`Would open a pull request in ${CENTRAL_REPO}: "${result.title}"`);
       output.out(`Would add a ${result.bump} changeset, and set metadata.updated to today.`);
+      if (result.newBundle !== undefined) {
+        output.out(
+          `Would add a CODEOWNERS line for skills/repos/${result.newBundle}/ naming the skills maintainers.`,
+        );
+      }
       output.out(
         values.new === true
           ? `Would then remove the local draft of ${name}.`
@@ -82,6 +96,11 @@ export const promote: Command = {
         ? `Removed the local draft of ${name}. It arrives with the next release once the pull request merges.`
         : `Restored the synced copy of ${name}. Your change arrives with the next release once the pull request merges.`,
     );
+    if (result.newBundle !== undefined) {
+      output.out(
+        `Once that release is out, set oakSkills.bundle to "${result.newBundle}" in package.json and run "oak-skills sync" to receive it.`,
+      );
+    }
     return ExitCode.Ok;
   },
 };

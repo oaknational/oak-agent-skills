@@ -59,6 +59,10 @@ describe('oak-skills promote', () => {
     [[], 'promote needs exactly one skill name.'],
     [['oak-a', 'oak-b'], 'promote needs exactly one skill name.'],
     [['oak-beta', '--bump', 'huge'], '--bump must be patch, minor or major, not "huge".'],
+    [
+      ['oak-beta', '--bundle', 'ora'],
+      '--bundle only goes with --new, to propose the first skill of a new bundle.',
+    ],
   ])('rejects %j with the usage exit code', async (args, message) => {
     const { repo, remote } = setUp();
     const result = await promote(repo.root, fakeGitHub(remote), ...args);
@@ -173,5 +177,22 @@ describe('oak-skills promote', () => {
       'Add it',
     );
     expect(result.out).toContain('Removed the local draft of owa-new.');
+  });
+
+  it('says how to receive the first skill of a new bundle, on a dry run and after promoting it', async () => {
+    const { repo, remote } = setUp();
+    setOakSkills(repo.root, { profiles: ['base'] });
+    applySync(planSync(repo.root, packageFixture));
+    writeTree(repo.root, { '.agents/skills/ora-lint/SKILL.md': skillText({ name: 'ora-lint' }) });
+    const args = ['ora-lint', '--new', '--bundle', 'ora', '--message', 'Add lint guidance'];
+    const dry = await promote(repo.root, fakeGitHub(remote), ...args, '--dry-run');
+    expect(dry.out).toContain(
+      'Would add a CODEOWNERS line for skills/repos/ora/ naming the skills maintainers.',
+    );
+    const result = await promote(repo.root, fakeGitHub(remote), ...args);
+    expect(result.code).toBe(0);
+    expect(result.out).toContain(
+      'Once that release is out, set oakSkills.bundle to "ora" in package.json and run "oak-skills sync" to receive it.',
+    );
   });
 });

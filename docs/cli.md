@@ -171,19 +171,29 @@ Synced skills are read-only here, but improving them is welcome: a local edit of
 2. Preview the change: `pnpm exec oak-skills promote <name> --dry-run`.
 3. Promote it: `pnpm exec oak-skills promote <name>`.
 
-`promote` asks why you made the change and which version bump it needs, or takes them from `--message` and `--bump`. Then it:
+`promote` first checks that `gh` is ready and that you can push to the central repository, so it never asks you anything it can't act on. It asks why you made the change and which version bump it needs, or takes them from `--message` and `--bump`. Then it:
 
 1. clones the central repository with your own `gh` login, and creates a branch from `main`;
 2. applies your change, taken against the release your copy came from, with a three-way merge, so it still applies if the skill has changed since;
 3. sets the skill's `metadata.updated` to today, and adds a changeset;
-4. opens a pull request with a [Conventional Commit](https://www.conventionalcommits.org/) title and the template filled in, including an `Originating-Repo:` line naming your repository. If the merge conflicted, the pull request is a draft with the conflict marked, for a reviewer to resolve;
+4. opens a pull request with a [Conventional Commit](https://www.conventionalcommits.org/) title and the template filled in, including an `Originating-Repo:` line naming your repository. If the merge conflicted, the pull request is a draft with the conflict marked, for a reviewer to resolve. If GitHub won't open the pull request, `promote` deletes the branch it pushed and changes nothing here;
 5. restores the synced copy here with `oak-skills sync`, so your own pull request passes `oak-skills check`.
 
 Your improvement arrives with the next release, through the usual Dependabot pull request.
 
 ### Proposing a new skill
 
-To propose a skill for your repository's bundle, draft it in `.agents/skills/<name>/` or `.claude/skills/<name>/`, then run `pnpm exec oak-skills promote <name> --new`. The name must start with your repository's code, such as `owa-`, and `oakSkills` must name the bundle. `promote` proposes the whole folder for `skills/repos/<code>/`, then removes the local draft. Follow the [guide to contributing a skill](contributing-a-skill.md) when you write it.
+To propose a skill for your repository's bundle, draft it in `.agents/skills/<name>/` or `.claude/skills/<name>/`, then run `pnpm exec oak-skills promote <name> --new`. The name must start with your repository's code, such as `owa-`, and `oakSkills` must name the bundle. `promote` proposes the whole folder for `skills/repos/<code>/`, then removes the local draft. If there's a draft in both folders, they must be the same, or `promote` stops and asks you to keep one. Follow the [guide to contributing a skill](contributing-a-skill.md) when you write it.
+
+#### The first skill of a new bundle
+
+If your repository has no bundle yet, ask the skills maintainers for its code, two to four lowercase letters, then pass it with `--bundle`:
+
+```sh
+pnpm exec oak-skills promote ora-lint-rules --new --bundle ora
+```
+
+`promote` proposes the skill for `skills/repos/<code>/`, and adds a line for that folder to the central repository's `CODEOWNERS`, naming the skills maintainers. Add your team to that line in the pull request. Once a release includes the skill, set `oakSkills.bundle` to the code and run `pnpm exec oak-skills sync` to receive it. `--bundle` only applies while `oakSkills` names no bundle, and only to a code the installed version doesn't have yet.
 
 ### Choosing the version bump
 
@@ -206,6 +216,7 @@ Until version 1.0.0, a major change is recorded as minor in the changeset, becau
 | Option                         | What it does                                                                                                                             |
 | ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
 | `--new`                        | Proposes a drafted skill for your repository's bundle, rather than an edit to a synced one.                                              |
+| `--bundle <code>`              | With `--new`, proposes the first skill of a new bundle, when `oakSkills` names no bundle yet.                                            |
 | `--bump <patch\|minor\|major>` | The version bump the change needs, instead of being asked.                                                                               |
 | `--message <text>`             | Why you made the change, used for the title, the changeset and the pull request. Without a terminal, such as in a script, it's required. |
 | `--dry-run`                    | Prints the change and what `promote` would do, without cloning, opening or changing anything.                                            |
