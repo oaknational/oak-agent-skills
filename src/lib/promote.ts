@@ -276,6 +276,12 @@ function bundleFor(
         { exitCode: ExitCode.Usage, hint: 'Leave out --bundle.' },
       );
     }
+    if (!readCatalogue(packageDir).bundles.has(configured)) {
+      throw fail(
+        `oakSkills.bundle names "${configured}", which the installed package doesn't have yet.`,
+        `To propose its first skill, remove oakSkills.bundle from package.json, then run promote --new with --bundle ${configured}.`,
+      );
+    }
     return { code: configured, isNew: false };
   }
   if (requested === undefined) {
@@ -299,6 +305,12 @@ function bundleFor(
   return { code: requested, isNew: true };
 }
 
+function suggestedName(code: string, name: string): string {
+  if (name.endsWith(`-${code}`)) return `${code}-${name.slice(0, -code.length - 1)}`;
+  const rest = name.replace(/^[a-z0-9]+-/, '');
+  return rest === name || rest === code ? `${code}-${name}` : `${code}-${rest}`;
+}
+
 function locateDraft(
   root: string,
   packageDir: string,
@@ -310,7 +322,7 @@ function locateDraft(
   if (!name.startsWith(`${bundle.code}-`)) {
     throw fail(
       `${name} must start with "${bundle.code}-", this repository's code, to join its bundle.`,
-      `Rename the folder and the name in its SKILL.md, for example to ${bundle.code}-${name.replace(/^[a-z0-9]+-/, '')}.`,
+      `Rename the folder and the name in its SKILL.md, for example to ${suggestedName(bundle.code, name)}.`,
     );
   }
   const synced = readManifest(root)?.skills;
@@ -388,6 +400,17 @@ function addBundleOwners(clone: string, code: string): void {
   const separator = existing === '' || existing.endsWith('\n') ? '' : '\n';
   mkdirSync(dirname(file), { recursive: true });
   writeFileSync(file, `${existing}${separator}/skills/repos/${code}/ ${MAINTAINERS}\n`);
+}
+
+function addSpellingWord(clone: string, word: string): void {
+  const file = join(clone, 'cspell-words.txt');
+  const words = readIfPresent(file)
+    .split('\n')
+    .filter((line) => line !== '');
+  if (words.some((line) => line.toLowerCase() === word)) return;
+  const at = words.findIndex((line) => line.toLowerCase() > word);
+  words.splice(at === -1 ? words.length : at, 0, word);
+  writeFileSync(file, `${words.join('\n')}\n`);
 }
 
 // Takes the diff against the skill at the release tag the copy came from, then applies it to a
@@ -480,8 +503,10 @@ export async function promote(
     const clone = join(work, 'oak-agent-skills');
     ctx.log(`Cloning ${CENTRAL_REPO}...`);
     ctx.github.clone(CENTRAL_REPO, clone);
-    const date = today(ctx.now ?? new Date());
-    const branch = `promote/${options.name}-${String((ctx.now ?? new Date()).getTime())}`;
+    const now = ctx.now ?? new Date();
+    const date = today(now);
+    const stamp = String(now.getTime());
+    const branch = `promote/${options.name}-${stamp}`;
     git(clone, 'switch', '--quiet', '--create', branch);
 
     let conflicted = false;
@@ -489,7 +514,10 @@ export async function promote(
       if (existsSync(join(clone, located.source))) {
         throw fail(`The central repository already has ${located.source}.`);
       }
-      if (located.newBundle !== undefined) addBundleOwners(clone, located.newBundle);
+      if (located.newBundle !== undefined) {
+        addBundleOwners(clone, located.newBundle);
+        addSpellingWord(clone, located.newBundle);
+      }
       copyDraft(root, located.localFolders[0] ?? '', join(clone, located.source));
     } else {
       conflicted = applyEdit(clone, work, located);
@@ -499,11 +527,7 @@ export async function promote(
     writeFileSync(skillFile, setUpdatedDate(readFileSync(skillFile, 'utf8'), date));
     const changesetBump = bump === 'major' && located.version.startsWith('0.') ? 'minor' : bump;
     writeFileSync(
-      join(
-        clone,
-        '.changeset',
-        `promote-${options.name}-${String((ctx.now ?? new Date()).getTime())}.md`,
-      ),
+      join(clone, '.changeset', `promote-${options.name}-${stamp}.md`),
       `---\n'@oaknational/oak-agent-skills': ${changesetBump}\n---\n\n${reason.replace(/\.?$/, '.')}\n`,
     );
     const origin = originatingRepo(root);
@@ -512,7 +536,7 @@ export async function promote(
     const note = conflicted
       ? "> [!WARNING]\n> This change didn't apply cleanly to `main`, because the skill has changed since the version it was edited from. The conflict markers are committed; resolve them before marking this ready for review."
       : located.newBundle !== undefined
-        ? `> [!NOTE]\n> The first skill of a new bundle, \`${located.newBundle}\`. promote added a CODEOWNERS line for \`skills/repos/${located.newBundle}/\` naming the skills maintainers: add the repository's own team to it. Check the skill's frontmatter, and run \`pnpm readme:skills\`.`
+        ? `> [!NOTE]\n> The first skill of a new bundle, \`${located.newBundle}\`. promote added a CODEOWNERS line for \`skills/repos/${located.newBundle}/\` naming the skills maintainers: add the repository's own team to it. It also added \`${located.newBundle}\` to \`cspell-words.txt\`. Check the skill's frontmatter, and run \`pnpm readme:skills\`.`
         : options.isNew
           ? '> [!NOTE]\n> A new skill. Check its frontmatter, and run `pnpm readme:skills`.'
           : undefined;

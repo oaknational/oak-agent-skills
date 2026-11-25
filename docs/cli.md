@@ -205,7 +205,7 @@ If your repository has no bundle yet, ask the skills maintainers for its code, t
 pnpm exec oak-skills promote ora-lint-rules --new --bundle ora
 ```
 
-`promote` proposes the skill for `skills/repos/<code>/`, and adds a line for that folder to the central repository's `CODEOWNERS`, naming the skills maintainers. Add your team to that line in the pull request. Once a release includes the skill, set `oakSkills.bundle` to the code and run `pnpm exec oak-skills sync` to receive it. `--bundle` only applies while `oakSkills` names no bundle, and only to a code the installed version doesn't have yet.
+`promote` proposes the skill for `skills/repos/<code>/`, adds a line for that folder to the central repository's `CODEOWNERS`, naming the skills maintainers, and adds the code to its `cspell-words.txt`. Add your team to the `CODEOWNERS` line in the pull request. Once a release includes the skill, set `oakSkills.bundle` to the code and run `pnpm exec oak-skills sync` to receive it. `--bundle` only applies while `oakSkills` names no bundle, and only to a code the installed version doesn't have yet.
 
 ### Choosing the version bump
 

@@ -205,7 +205,7 @@ describe('oak-skills promote', () => {
     const args = ['ora-lint', '--new', '--bundle', 'ora', '--message', 'Add lint guidance'];
     const dry = await promote(repo.root, fakeGitHub(remote), ...args, '--dry-run');
     expect(dry.out).toContain(
-      'Would add a CODEOWNERS line for skills/repos/ora/ naming the skills maintainers.',
+      'Would add a CODEOWNERS line for skills/repos/ora/ naming the skills maintainers, and ora to cspell-words.txt.',
     );
     const result = await promote(repo.root, fakeGitHub(remote), ...args);
     expect(result.code).toBe(0);
