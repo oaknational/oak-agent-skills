@@ -2,6 +2,7 @@ import {
   existsSync,
   mkdirSync,
   readFileSync,
+  lstatSync,
   readlinkSync,
   symlinkSync,
   writeFileSync,
@@ -245,6 +246,65 @@ describe('things sync did not write', () => {
     expect(planSync(root, packageFixture).unmanaged).toEqual([]);
     expect(existsSync(join(root, MANIFEST_PATH))).toBe(true);
   });
+});
+
+describe('files git ignores', () => {
+  it('leaves them alone and out of every report, inside a skill and in either skills folder', () => {
+    const { root } = consumer();
+    sync(root);
+    writeTree(root, {
+      '.gitignore': '*.local\n',
+      '.agents/skills/notes.local': 'x',
+      '.claude/skills/notes.local': 'x',
+      '.agents/skills/oak-alpha/notes.local': 'x',
+    });
+    const plan = sync(root);
+    expect(plan).toMatchObject({
+      update: [],
+      unchanged: ['oak-alpha', 'oak-beta'],
+      unmanaged: [],
+      replacedEdits: [],
+      links: { unmanaged: [] },
+    });
+    expect(hasChanges(plan)).toBe(false);
+    expect(existsSync(join(root, '.agents/skills/oak-alpha/notes.local'))).toBe(true);
+  });
+});
+
+describe('a link inside a skill', () => {
+  it('counts as a local change, so sync replaces the skill and removes the link', () => {
+    const { root } = consumer();
+    sync(root);
+    symlinkSync('../../../package.json', join(root, '.agents/skills/oak-alpha/extra.md'));
+    const plan = sync(root);
+    expect(plan.update.map((skill) => skill.name)).toEqual(['oak-alpha']);
+    expect(plan.replacedEdits).toEqual(['.agents/skills/oak-alpha/extra.md']);
+    expect(existsSync(join(root, '.agents/skills/oak-alpha/extra.md'))).toBe(false);
+    expect(read(root, '.agents/skills/oak-alpha/SKILL.md')).toBe(
+      read(packageFixture, 'skills/central/oak-alpha/SKILL.md'),
+    );
+  });
+});
+
+describe('a skills folder that is a link', () => {
+  it.each(['.agents/skills', '.claude/skills'])(
+    'refuses with exit code 5 when %s links to the other, and changes nothing',
+    (linked) => {
+      const { root } = consumer();
+      const other = linked === '.agents/skills' ? '.claude/skills' : '.agents/skills';
+      mkdirSync(join(root, other), { recursive: true });
+      mkdirSync(join(root, linked, '..'), { recursive: true });
+      symlinkSync(`../${other}`, join(root, linked));
+      expect(() => planSync(root, packageFixture)).toThrow(
+        expect.objectContaining({
+          message: expect.stringContaining(`${linked} is a link to ../${other}.`) as unknown,
+          exitCode: ExitCode.Configuration,
+        }),
+      );
+      expect(lstatSync(join(root, linked)).isSymbolicLink()).toBe(true);
+      expect(existsSync(join(root, MANIFEST_PATH))).toBe(false);
+    },
+  );
 });
 
 describe('folders outside .agents/skills/', () => {

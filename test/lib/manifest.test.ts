@@ -73,13 +73,30 @@ describe('the manifest', () => {
     expect(() => readManifest(root)).toThrow(
       expect.objectContaining({
         exitCode: ExitCode.Configuration,
-        hint: expect.stringContaining('oak-skills sync') as unknown,
+        hint: expect.stringContaining('delete it and run "oak-skills sync"') as unknown,
       }),
     );
   });
 
+  it('names the version of a manifest from a newer oak-skills', () => {
+    writeTree(root, { [MANIFEST_PATH]: JSON.stringify({ ...manifest, manifestVersion: 2 }) });
+    expect(() => readManifest(root)).toThrow(
+      expect.objectContaining({
+        message: `${MANIFEST_PATH} has manifest version 2, from a newer oak-skills than this one.`,
+        exitCode: ExitCode.Configuration,
+        hint: expect.stringContaining('Install the version') as unknown,
+      }),
+    );
+  });
+
+  const withFiles = (files: Record<string, string>): Manifest => ({
+    ...manifest,
+    skills: { 'oak-alpha': { source: 'skills/central/oak-alpha', files } },
+    symlinks: [],
+  });
+
   it.each([
-    ['another version', { ...manifest, manifestVersion: 2 }],
+    ['an older version', { ...manifest, manifestVersion: 0 }],
     ['no package version', { ...manifest, package: { name: 'x' } }],
     ['a bad bundle', { ...manifest, config: { ...manifest.config, bundle: 3 } }],
     [
@@ -107,6 +124,19 @@ describe('the manifest', () => {
       { ...manifest, skills: { x: { source: 'skills/central/../../src', files: {} } } },
     ],
     ['a list instead of an object', []],
+    ['a file path that leaves the skill folder', withFiles({ '../../package.json': SUM('0') })],
+    ['an absolute file path', withFiles({ '/etc/hosts': SUM('0') })],
+    ['a file path with a backslash', withFiles({ 'a\\b.md': SUM('0') })],
+    ['a file path with an empty part', withFiles({ 'a//b.md': SUM('0') })],
+    ['a checksum that is not SHA-256', withFiles({ 'SKILL.md': 'abc' })],
+    [
+      'a link outside .claude/skills',
+      { ...manifest, symlinks: [{ path: '.claude/x', target: '../../.agents/skills/oak-alpha' }] },
+    ],
+    [
+      'a link to somewhere other than a skill folder',
+      { ...manifest, symlinks: [{ path: '.claude/skills/oak-alpha', target: '../../../secrets' }] },
+    ],
   ])('rejects a manifest with %s', (_label, bad) => {
     writeTree(root, { [MANIFEST_PATH]: JSON.stringify(bad) });
     expect(() => readManifest(root)).toThrow(

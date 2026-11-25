@@ -8,12 +8,12 @@ When several problems apply at once, the highest exit code wins, so fix that one
 
 ### Exit code 1: a synced skill was edited
 
-A file in `.agents/skills/` changed since the last sync, a file was added to or deleted from a synced skill, or a link in `.claude/skills/` was deleted or changed. Synced skills are read-only in consuming repositories, because the next sync would overwrite any change.
+A synced skill no longer matches the installed package: a file in `.agents/skills/` changed, a file or link was added to or deleted from a synced skill, or a link in `.claude/skills/` was deleted or changed. `check` compares each skill with the package's own copy, so changing a file and its checksum in `.agents/skills/.oak-manifest.json` together is still an edit, and so is any change to the manifest's checksums, sources or links. Synced skills are read-only in consuming repositories, because the next sync would overwrite any change.
 
 An edit often means the central skill is wrong or incomplete, so don't just throw it away:
 
 - **If the edit improves the skill**, send it to the central repository with `pnpm exec oak-skills promote <skill>`. It opens a pull request there and restores the synced copy here, so your pull request passes. The improvement arrives with the next release.
-- **If the edit was accidental**, revert it with git, or run `pnpm exec oak-skills sync` to restore the synced copy.
+- **If the edit was accidental**, or only the manifest changed, revert it with git, or run `pnpm exec oak-skills sync` to restore the synced copy.
 
 ### Exit code 2: the skills are out of date
 
@@ -38,6 +38,8 @@ There's a folder or file in `.agents/skills/` or `.claude/skills/` that `oak-ski
 - **To keep a skill**, propose it for your repository's bundle with `pnpm exec oak-skills promote --new <name>`. It removes the local draft, and the skill arrives with the next release.
 - **Otherwise**, delete it.
 
+`oak-skills` skips anything git ignores, because it's never committed. So for a local file such as `.DS_Store`, add it to `.gitignore` rather than deleting it each time.
+
 Personal skills you don't want to share belong in `~/.claude/skills/` or `~/.agents/skills/` on your own machine, not in the repository. Don't give them the `oak-` prefix: in Claude Code, a personal skill overrides a project skill with the same name.
 
 ### Exit code 5: a configuration problem
@@ -48,7 +50,8 @@ Personal skills you don't want to share belong in `~/.claude/skills/` or `~/.age
 - **No `oakSkills` settings.** Run `pnpm exec oak-skills init` to add them.
 - **A setting `oak-skills` doesn't recognise**, or a value of the wrong type.
 - **No root `package.json`**, or the command isn't running inside a git repository.
-- **An unreadable `.agents/skills/.oak-manifest.json`.** Restore it from git, or run `pnpm exec oak-skills sync` to write it again.
+- **An unreadable `.agents/skills/.oak-manifest.json`.** Restore it from git, or delete it and run `pnpm exec oak-skills sync`, which writes a new one and keeps every skill folder that matches the installed package. If the message says the manifest comes from a newer `oak-skills`, install that version instead.
+- **`.agents/skills` or `.claude/skills` is a link**, such as one folder linking to the other. `oak-skills` keeps the skills in `.agents/skills/` and makes one link per skill in `.claude/skills/`, so both must be real folders. Remove the link, then run `pnpm exec oak-skills sync`.
 
 Fix the settings, then run the command again.
 

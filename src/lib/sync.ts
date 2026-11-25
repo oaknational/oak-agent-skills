@@ -1,8 +1,8 @@
-import { cpSync, existsSync, lstatSync, readdirSync, readFileSync, rmSync } from 'node:fs';
+import { cpSync, existsSync, readFileSync, rmSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { PACKAGE_DIR, readCatalogue } from './catalogue.ts';
-import { hashFolder } from './hash.ts';
+import { filesDiffer, hashFolder } from './hash.ts';
 import {
   MANIFEST_PATH,
   readManifest,
@@ -20,6 +20,7 @@ import {
 } from './profiles.ts';
 import { findRepositoryRoot, readRootPackageJson } from './root.ts';
 import { applyLinks, linkPath, linkTarget, planLinks, type LinkPlan } from './shims.ts';
+import { assertRealSkillFolders, readSkillFolders, type FolderState } from './skill-folders.ts';
 
 export interface SyncPlan {
   root: string;
@@ -41,17 +42,14 @@ export interface SyncPlan {
   manifestChanged: boolean;
 }
 
-function filesDiffer(a: Record<string, string>, b: Record<string, string>): string[] {
-  const names = new Set([...Object.keys(a), ...Object.keys(b)]);
-  return [...names].filter((name) => a[name] !== b[name]).sort();
-}
-
-function isFolder(path: string): boolean {
-  try {
-    return lstatSync(path).isDirectory();
-  } catch {
-    return false;
-  }
+function localChanges(
+  name: string,
+  state: FolderState,
+  recorded: Record<string, string>,
+): string[] {
+  return [...filesDiffer(state.files, recorded), ...state.others].map(
+    (path) => `${SKILLS_DIR}/${name}/${path}`,
+  );
 }
 
 // config replaces the settings in package.json, so init can plan a sync before writing them.
@@ -61,12 +59,14 @@ export function planSync(
   config?: OakSkillsConfig,
 ): SyncPlan {
   const root = findRepositoryRoot(cwd);
+  assertRealSkillFolders(root);
   config ??= readOakSkillsConfig(readRootPackageJson(root));
   const catalogue = readCatalogue(packageDir);
   const { skills, warnings } = resolveSkills(config, catalogue);
   const info = readPackageInfo(pathToFileURL(join(packageDir, 'package.json')));
   const previous = readManifest(root);
   const managedBefore = previous?.skills ?? {};
+  const folders = readSkillFolders(root);
 
   const plan: Pick<
     SyncPlan,
@@ -87,16 +87,16 @@ export function planSync(
     if (!existsSync(target)) {
       plan.add.push(skill);
     } else {
-      const current = isFolder(target) ? hashFolder(target) : undefined;
-      const recorded = managedBefore[skill.name];
-      if (current !== undefined && filesDiffer(current, source).length === 0) {
+      const current = folders.read(skill.name);
+      const recorded = Object.hasOwn(managedBefore, skill.name)
+        ? managedBefore[skill.name]
+        : undefined;
+      if (current?.others.length === 0 && filesDiffer(current.files, source).length === 0) {
         // Identical to the package, whether or not a previous sync recorded it.
         plan.unchanged.push(skill.name);
       } else if (recorded !== undefined && current !== undefined) {
         plan.update.push(skill);
-        for (const file of filesDiffer(current, recorded.files)) {
-          plan.replacedEdits.push(`${SKILLS_DIR}/${skill.name}/${file}`);
-        }
+        plan.replacedEdits.push(...localChanges(skill.name, current, recorded.files));
       } else {
         plan.conflicts.push(skill.name);
         continue;
@@ -108,23 +108,15 @@ export function planSync(
   const wanted = new Set(skills.map((skill) => skill.name));
   for (const [name, recorded] of Object.entries(managedBefore)) {
     if (wanted.has(name)) continue;
-    const target = join(root, SKILLS_DIR, name);
-    if (!isFolder(target)) continue;
+    const current = folders.read(name);
+    if (current === undefined) continue;
     plan.remove.push(name);
-    for (const file of filesDiffer(hashFolder(target), recorded.files)) {
-      plan.replacedEdits.push(`${SKILLS_DIR}/${name}/${file}`);
-    }
+    plan.replacedEdits.push(...localChanges(name, current, recorded.files));
   }
 
-  const skillsDir = join(root, SKILLS_DIR);
-  const unmanaged = existsSync(skillsDir)
-    ? readdirSync(skillsDir)
-        .filter(
-          (entry) =>
-            entry !== '.oak-manifest.json' && !wanted.has(entry) && !plan.remove.includes(entry),
-        )
-        .sort()
-    : [];
+  const unmanaged = folders.skillEntries.filter(
+    (entry) => entry !== '.oak-manifest.json' && !wanted.has(entry) && !plan.remove.includes(entry),
+  );
 
   const linked = Object.keys(synced).sort();
   const links = planLinks(
@@ -132,6 +124,7 @@ export function planSync(
     linked,
     (previous?.symlinks ?? []).map((link) => link.path.replace(/^\.claude\/skills\//, '')),
   );
+  links.unmanaged = links.unmanaged.filter((name) => folders.linkEntries.includes(name));
   const manifest: Manifest = {
     manifestVersion: 1,
     package: { name: info.name, version: info.version },

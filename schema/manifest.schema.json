@@ -51,6 +51,9 @@
             "description": "Paths relative to the skill's folder, with their SHA-256 checksums.",
             "type": "object",
             "minProperties": 1,
+            "propertyNames": {
+              "pattern": "^(?!\\.\\.?(?:/|$))[^/\\\\\\u0000]+(?:/(?!\\.\\.?(?:/|$))[^/\\\\\\u0000]+)*$"
+            },
             "additionalProperties": { "$ref": "#/$defs/sha256" }
           }
         }
