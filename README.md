@@ -29,7 +29,7 @@ In a repository you want to receive the skills, which needs Node 24.22.1 or a la
      - '@oaknational/oak-agent-skills'
    ```
 
-   Do this first. Otherwise pnpm holds back a new release and installs the 0.0.0 placeholder, which has no `oak-skills` command. pnpm 11 does this even when no release age is set. If the repository already exempts `'@oaknational/*'`, skip this step.
+   Do this first. Otherwise pnpm holds back a new release and installs an older version for the first week after each release. pnpm 11 does this even when no release age is set. If the repository already exempts `'@oaknational/*'`, skip this step.
 
 2. At the root, add the package and set it up:
 
@@ -40,7 +40,7 @@ In a repository you want to receive the skills, which needs Node 24.22.1 or a la
 
    In a pnpm workspace that lists packages, add `--workspace-root` to `pnpm add`, so the package goes in the root `package.json`.
 
-`init` writes the settings, workflows and starter files the repository needs, runs the first sync and lists what it can't do for you. Review and commit what it wrote. The workflows install the Node version in `package.json`'s `engines.node`, so set it if it's missing. [Subscribing a repository](docs/cli.md#subscribing-a-repository) covers bundles, pnpm workspaces and the GitHub set-up.
+`init` writes the settings, workflows and starter files the repository needs, runs the first sync and lists what it can't do for you. Add `--profile frontend` for a repository with an interface. Review and commit what it wrote. The workflows install the Node version in `package.json`'s `engines.node`, so set it if it's missing. [Subscribing a repository](docs/cli.md#subscribing-a-repository) covers bundles, pnpm workspaces and the GitHub set-up.
 
 ## Skills
 

@@ -1,10 +1,12 @@
 import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
-import { PACKAGE_DIR } from './catalogue.ts';
+import { pathToFileURL } from 'node:url';
+import { PACKAGE_DIR, readCatalogue } from './catalogue.ts';
 import { runGit } from './git.ts';
 import { LINKS_DIR, SKILLS_DIR } from './manifest.ts';
 import { OakSkillsError } from './errors.ts';
 import { ExitCode } from './exit-codes.ts';
+import { readPackageInfo } from './package-info.ts';
 import { readOakSkillsConfig, type OakSkillsConfig } from './profiles.ts';
 import { findRepositoryRoot, isPnpmWorkspace, readRootPackageJson } from './root.ts';
 import { PACKAGE_NAME, readDependabot, readReleaseAge } from './settings-files.ts';
@@ -128,7 +130,7 @@ function dependabotAdvice(text: string): string[] {
 
 export function planInit(
   cwd: string,
-  options: { bundle?: string } = {},
+  options: { bundle?: string; profiles?: string[] } = {},
   packageDir: string = PACKAGE_DIR,
 ): InitPlan {
   const root = findRepositoryRoot(cwd);
@@ -142,17 +144,35 @@ export function planInit(
       { exitCode: ExitCode.Configuration },
     );
   }
+  const known = readCatalogue(packageDir).profiles;
+  const unknown = (options.profiles ?? []).find((profile) => !known.has(profile));
+  if (unknown !== undefined) {
+    throw new OakSkillsError(
+      `--profile "${unknown}" isn't a profile in version ${readPackageInfo(pathToFileURL(join(packageDir, 'package.json'))).version}. The profiles are ${[...known.keys()].map((name) => `"${name}"`).join(', ')}.`,
+      { exitCode: ExitCode.Configuration },
+    );
+  }
+  const profiles = [...new Set(['base', ...(options.profiles ?? [])])];
 
   let config: OakSkillsConfig;
   let addConfig: OakSkillsConfig | undefined;
   if (packageJson.oakSkills === undefined) {
-    config = { profiles: ['base'], bundle: options.bundle, include: [], exclude: [] };
+    config = { profiles, bundle: options.bundle, include: [], exclude: [] };
     addConfig = config;
   } else {
     config = readOakSkillsConfig(packageJson);
     if (options.bundle !== undefined && options.bundle !== config.bundle) {
       warnings.push(
         `package.json already has oakSkills settings, so init left them alone, including the bundle${config.bundle === undefined ? '' : ` "${config.bundle}"`}. Change oakSkills.bundle by hand if you need to.`,
+      );
+    }
+    const existing = config.profiles;
+    if (
+      options.profiles !== undefined &&
+      (profiles.length !== existing.length || profiles.some((name) => !existing.includes(name)))
+    ) {
+      warnings.push(
+        `package.json already has oakSkills settings, so init left them alone, including the profiles ${JSON.stringify(existing)}. Change oakSkills.profiles by hand if you need to.`,
       );
     }
   }
@@ -209,6 +229,7 @@ export function planInit(
   }
 
   const packageManager = packageJson.packageManager;
+  const engines = packageJson.engines;
   const checklist: ChecklistItem[] = [
     {
       done: false,
@@ -221,6 +242,13 @@ export function planInit(
     {
       done: typeof packageManager === 'string' && packageManager.startsWith('pnpm@'),
       text: 'package.json has a packageManager field naming pnpm, which the workflows use to install the right version.',
+    },
+    {
+      done:
+        typeof engines === 'object' &&
+        engines !== null &&
+        typeof (engines as Record<string, unknown>).node === 'string',
+      text: 'package.json has an engines.node field, which the workflows read to set up Node.',
     },
     { done: false, text: '"oak-skills check" is a required status check for pull requests.' },
   ];

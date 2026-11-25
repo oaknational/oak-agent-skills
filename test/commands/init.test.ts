@@ -83,6 +83,41 @@ describe('oak-skills init in an empty repository', () => {
     expect(result.out).not.toContain('To do');
   });
 
+  it('adds each --profile to base', async () => {
+    const { root } = repoFrom();
+    const result = await init(root, '--profile', 'frontend', '--profile', 'base');
+    expect(result.code).toBe(0);
+    expect(result.out).toContain('Added oakSkills to package.json: profiles ["base","frontend"]');
+    expect(result.out).toContain('Synced 3 skills');
+    expect(oakSkillsIn(root)).toEqual({
+      profiles: ['base', 'frontend'],
+      include: [],
+      exclude: [],
+    });
+  });
+
+  it('stops on an unknown --profile, and changes nothing', async () => {
+    const repo = repoFrom();
+    const result = await init(repo.root, '--profile', 'backend');
+    expect(result.code).toBe(ExitCode.Configuration);
+    expect(result.err).toContain(
+      '--profile "backend" isn\'t a profile in version 1.2.3. The profiles are "base", "frontend".',
+    );
+    expect(repo.git('status', '--porcelain')).toBe('');
+  });
+
+  it('ticks engines.node on the checklist only when package.json has it', async () => {
+    const without = await init(repoFrom().root);
+    expect(without.out).toContain('- [ ] package.json has an engines.node field');
+    const { root } = repoFrom();
+    const packageJson = JSON.parse(read(root, 'package.json')) as Record<string, unknown>;
+    writeFileSync(
+      join(root, 'package.json'),
+      `${JSON.stringify({ ...packageJson, engines: { node: '>=24.22.1 <25' } }, null, 2)}\n`,
+    );
+    expect((await init(root)).out).toContain('- [x] package.json has an engines.node field');
+  });
+
   it('writes nothing on a dry run, but shows the plan', async () => {
     const repo = repoFrom();
     const result = await init(repo.root, '--bundle', 'oc', '--dry-run');
@@ -159,6 +194,17 @@ describe('oak-skills init in a repository with its own files', () => {
       'package.json already has oakSkills settings, so init left them alone, including the bundle "oc".',
     );
     expect(readManifest(root)?.config.profiles).toEqual(['base', 'frontend']);
+  });
+
+  it('keeps existing oakSkills settings, and warns if --profile differs', async () => {
+    const { root } = repoFrom();
+    setOakSkills(root, { profiles: ['base'] });
+    const result = await init(root, '--profile', 'frontend');
+    expect(oakSkillsIn(root)).toEqual({ profiles: ['base'] });
+    expect(result.err).toContain(
+      'package.json already has oakSkills settings, so init left them alone, including the profiles ["base"].',
+    );
+    expect((await init(root, '--profile', 'base')).err).not.toContain('including the profiles');
   });
 
   it('warns about --bundle when the existing settings have no bundle', async () => {
