@@ -95,9 +95,21 @@ export function checkUpdatedDates(
     // A skill that didn't exist before can have any date.
     const before = updatedAt(root, comparison.ref, location.path, deps);
     const { updated } = frontmatter.metadata;
-    if (before !== undefined && before === updated && !today.has(updated)) {
+    const file = `${location.path}/SKILL.md`;
+    const latest = [...today].sort().at(-1) ?? updated;
+    if (updated > latest) {
       problems.push({
-        file: `${location.path}/SKILL.md`,
+        file,
+        message: `has metadata.updated ${updated}, which is in the future. Set it to today's date.`,
+      });
+    } else if (before !== undefined && updated < before) {
+      problems.push({
+        file,
+        message: `has metadata.updated ${updated}, earlier than ${before} in ${comparison.description}. Set it to today's date.`,
+      });
+    } else if (before !== undefined && before === updated && !today.has(updated)) {
+      problems.push({
+        file,
         message: `has changed since ${comparison.description}, but metadata.updated is still ${before}. Set it to today's date.`,
       });
     }

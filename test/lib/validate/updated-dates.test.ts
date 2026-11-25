@@ -76,7 +76,38 @@ describe('checkUpdatedDates, against the last commit', () => {
     expect(dateProblems(repo.root)).toEqual([]);
   });
 
-  it('passes a new skill with any date', () => {
+  it('fails a changed skill whose date moves backwards', () => {
+    const repo = central();
+    writeFileSync(join(repo.root, GUIDE), '# Guide\n\nMore detail.\n');
+    setUpdated(repo.root, '2025-05-01');
+    expect(dateProblems(repo.root)).toEqual([
+      `${SKILL}: has metadata.updated 2025-05-01, earlier than 2025-06-01 in the last commit. Set it to today's date.`,
+    ]);
+  });
+
+  it('fails a changed skill dated in the future', () => {
+    const repo = central();
+    writeFileSync(join(repo.root, GUIDE), '# Guide\n\nMore detail.\n');
+    setUpdated(repo.root, '2026-11-03');
+    expect(dateProblems(repo.root, {}, new Date('2026-11-02T10:00:00Z'))).toEqual([
+      `${SKILL}: has metadata.updated 2026-11-03, which is in the future. Set it to today's date.`,
+    ]);
+  });
+
+  it('fails a new skill dated in the future', () => {
+    const repo = central();
+    writeTree(repo.root, {
+      'skills/central/oak-new/SKILL.md': skillText({
+        name: 'oak-new',
+        metadata: "  owner: '@oaknational/skills-maintainers'\n  updated: '2030-01-01'",
+      }),
+    });
+    expect(dateProblems(repo.root, {}, new Date('2026-11-02T10:00:00Z'))).toEqual([
+      "skills/central/oak-new/SKILL.md: has metadata.updated 2030-01-01, which is in the future. Set it to today's date.",
+    ]);
+  });
+
+  it('passes a new skill with any date up to today', () => {
     const repo = central();
     writeTree(repo.root, { 'skills/central/oak-new/SKILL.md': skillText({ name: 'oak-new' }) });
     expect(dateProblems(repo.root)).toEqual([]);
