@@ -10,6 +10,7 @@ import { findRepositoryRoot, isPnpmWorkspace, readRootPackageJson } from './root
 import { PACKAGE_NAME, readDependabot, readReleaseAge } from './settings-files.ts';
 import { BUNDLE_CODE } from './validate/central-repo.ts';
 import { applySync, planSync, type SyncPlan } from './sync.ts';
+import { andList } from './words.ts';
 
 // What init writes from the package's templates/ folder, if the repository doesn't have it yet.
 export const TEMPLATE_FILES = [
@@ -109,11 +110,11 @@ function dependabotAdvice(text: string): string[] {
   const advice: string[] = [];
   if (!settings.ownGroupFirst) {
     advice.push(
-      `.github/dependabot.yml already exists. In its npm update, give the skills package a group of its own, listed before any other group, and check daily:\n${GROUP_SNIPPET}`,
+      `.github/dependabot.yml already exists. In its npm update, give the skills package a group of its own, listed before any other group:\n${GROUP_SNIPPET}`,
     );
   }
   if (settings.catchAllGroups.length > 0) {
-    const names = settings.catchAllGroups.map((name) => `"${name}"`).join(', ');
+    const names = andList(settings.catchAllGroups.map((name) => `"${name}"`));
     advice.push(
       `.github/dependabot.yml's ${names} ${settings.catchAllGroups.length === 1 ? 'group takes' : 'groups take'} the skills package along with other packages, for version or security updates. Exclude it from each, so its updates always arrive on their own:\n        exclude-patterns:\n          - '${PACKAGE_NAME}'`,
     );

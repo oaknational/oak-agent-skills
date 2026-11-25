@@ -128,8 +128,9 @@ describe('oak-skills init in a repository with its own files', () => {
     expect(result.out).toContain('To do, because init never changes files you already have:');
     expect(result.out).toContain('- CLAUDE.md already exists. Add a line holding just @AGENTS.md');
     expect(result.out).toContain(
-      'give the skills package a group of its own, listed before any other group',
+      'give the skills package a group of its own, listed before any other group:\n',
     );
+    expect(result.out).not.toContain('check daily');
     expect(result.out).toContain('sets a cooldown, which would hold back every skills release');
     expect(result.out).toContain("        - '@oaknational/oak-agent-skills'");
   });
@@ -231,7 +232,7 @@ describe('oak-skills init with settings that would hold back or bundle the packa
     const { out } = await init(root);
     expect(out).toContain('give the skills package a group of its own');
     expect(out).toContain(
-      `.github/dependabot.yml's "npm", "npm-security" groups take the skills package along with other packages`,
+      `.github/dependabot.yml's "npm" and "npm-security" groups take the skills package along with other packages`,
     );
     expect(out).toContain(
       "        exclude-patterns:\n            - '@oaknational/oak-agent-skills'",

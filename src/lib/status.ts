@@ -23,6 +23,7 @@ import {
   readSkillFolders,
   type SkillFolders,
 } from './skill-folders.ts';
+import { andList } from './words.ts';
 
 export interface StatusReport {
   root: string;
@@ -195,9 +196,13 @@ export function computeStatus(cwd: string, packageDir: string = PACKAGE_DIR): St
     const missing = wantedNames.filter((name) => !synced.includes(name));
     const extra = synced.filter((name) => !wantedNames.includes(name));
     if (missing.length > 0)
-      report.outOfDate.push(`oakSkills now includes ${missing.join(', ')}, which isn't synced.`);
+      report.outOfDate.push(
+        `${andList(missing)} ${missing.length === 1 ? 'is' : 'are'} now among the skills this repository receives, but ${missing.length === 1 ? "isn't" : "aren't"} synced.`,
+      );
     if (extra.length > 0)
-      report.outOfDate.push(`${extra.join(', ')} is synced, but oakSkills no longer includes it.`);
+      report.outOfDate.push(
+        `${andList(extra)} ${extra.length === 1 ? 'is' : 'are'} synced, but no longer among the skills this repository receives.`,
+      );
   }
   compareSkills({ root, packageDir, manifest, folders, wanted, sameVersion, toolVersion }, report);
   return report;

@@ -109,6 +109,16 @@ describe('oak-skills check', () => {
     });
   });
 
+  it('says how to stop git tracking a local file such as .DS_Store', async () => {
+    const { root } = synced();
+    writeTree(root, { '.agents/skills/.DS_Store': 'x' });
+    const result = await check(root);
+    expect(result.code).toBe(4);
+    expect(result.err).toContain(
+      'For a local file such as .DS_Store, add it to .gitignore instead, because oak-skills skips whatever git ignores. If git already tracks the file, also run git rm --cached <path>.',
+    );
+  });
+
   it('still reports what oak-skills would not write when the manifest is missing', async () => {
     const { root } = synced();
     rmSync(join(root, '.agents/skills/.oak-manifest.json'));
