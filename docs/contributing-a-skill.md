@@ -158,7 +158,7 @@ Until version 1.0.0, record breaking changes as minor, because Changesets would 
 Run the checks before opening a pull request:
 
 1. `pnpm validate` checks every skill against the rules in this guide.
-2. If you added, removed or renamed a skill, or changed a description or profile, run `pnpm readme:skills` to regenerate the skills table in `README.md`. `validate` fails if it's out of date.
+2. If you added, removed or renamed a skill, or changed a description or profile, run `pnpm readme:skills` to regenerate the skills table in [the skills index](SKILLS_INDEX.md). `validate` fails if it's out of date.
 3. `pnpm lint:md` and `pnpm spell` check the Markdown and spelling.
 
 The git hooks run most of these on every commit, and CI runs all of them on every pull request.

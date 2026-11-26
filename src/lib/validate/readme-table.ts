@@ -1,10 +1,10 @@
 import { existsSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, posix } from 'node:path';
 import type { Problem } from './problem.ts';
 import type { Profiles } from './profiles.ts';
 import type { CheckedSkill } from './skill-checks.ts';
 
-export const README_PATH = 'README.md';
+export const SKILLS_INDEX_PATH = 'docs/SKILLS_INDEX.md';
 export const TABLE_START = '<!-- skills-table:start -->';
 export const TABLE_END = '<!-- skills-table:end -->';
 export const REGENERATE = 'pnpm readme:skills';
@@ -32,7 +32,8 @@ export function renderSkillsTable(
               .map(([name]) => `\`${name}\``)
               .join(', ')
           : `The \`${location.bundle}\` bundle`;
-      return `| [\`${location.name}\`](${location.path}/SKILL.md) | ${appliesTo} | ${cell(frontmatter?.description ?? '')} |`;
+      const link = posix.relative(posix.dirname(SKILLS_INDEX_PATH), `${location.path}/SKILL.md`);
+      return `| [\`${location.name}\`](${link}) | ${appliesTo} | ${cell(frontmatter?.description ?? '')} |`;
     });
   if (rows.length === 0) return 'No skills have been published yet.';
   return ['| Skill | Profile or bundle | What it does |', '| --- | --- | --- |', ...rows].join(
@@ -45,22 +46,24 @@ export function checkReadmeTable(
   skills: readonly CheckedSkill[],
   profiles: Profiles | undefined,
 ): Problem[] {
-  const file = join(root, README_PATH);
-  if (!existsSync(file)) return [{ file: README_PATH, message: 'is missing' }];
+  const file = join(root, SKILLS_INDEX_PATH);
+  if (!existsSync(file)) return [{ file: SKILLS_INDEX_PATH, message: 'is missing' }];
   const text = readFileSync(file, 'utf8');
   const start = text.indexOf(TABLE_START);
   const end = text.indexOf(TABLE_END);
   if (start === -1 || end === -1 || end < start) {
     return [
       {
-        file: README_PATH,
+        file: SKILLS_INDEX_PATH,
         message: `has no skills table. Add the ${TABLE_START} and ${TABLE_END} markers, then run ${REGENERATE}.`,
       },
     ];
   }
   const current = text.slice(start + TABLE_START.length, end).trim();
   if (current !== renderSkillsTable(skills, profiles)) {
-    return [{ file: README_PATH, message: `has an out-of-date skills table. Run ${REGENERATE}.` }];
+    return [
+      { file: SKILLS_INDEX_PATH, message: `has an out-of-date skills table. Run ${REGENERATE}.` },
+    ];
   }
   return [];
 }

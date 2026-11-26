@@ -70,6 +70,14 @@ Keep each `AGENTS.md` to about 100 lines of orientation: what the repository is,
 
 ## Other problems
 
+### No skills update pull request arrived
+
+Dependabot opens the update pull request on its first scheduled run after a release, so on a weekly schedule it can take up to a week. If it's later than that:
+
+- Check that the npm update in `.github/dependabot.yml` exempts the package from any `cooldown`, and that `pnpm-workspace.yaml` exempts it from `minimumReleaseAge`, as [Files you already have](cli.md#files-you-already-have) explains.
+- Check that Dependabot isn't paused. GitHub pauses it in a repository where a Dependabot pull request has been open for more than 90 days, and in that time nobody has merged or closed one, used an `@dependabot` command or changed `dependabot.yml`. A banner says so on the open Dependabot pull requests and in the repository's Dependabot settings. Merging or closing a Dependabot pull request resumes it on its schedule.
+- Check the latest `Dependabot Updates` run in the repository's Actions tab for an error.
+
 ### The sync workflow didn't run
 
 The `oak-skills-sync.yml` workflow only runs on a pull request that Dependabot opened in this repository and that bumps `@oaknational/oak-agent-skills`. If a bump pull request has no sync commit:

@@ -49,7 +49,7 @@ describe('oak-skills validate', () => {
         'skills/central/oak-example/SKILL.md:10: uses the !`command` syntax, which Claude Code runs as a shell command before the skill reaches the model',
         "skills/profiles.json: doesn't list code-review in any profile, so no repository could receive it",
         "skills/central/oak-example/SKILL.md: has changed since the last commit, but metadata.updated is still 2025-06-01. Set it to today's date.",
-        'README.md: has an out-of-date skills table. Run pnpm readme:skills.',
+        'docs/SKILLS_INDEX.md: has an out-of-date skills table. Run pnpm readme:skills.',
         '',
         'Found 5 problems in 2 skills.',
       ].join('\n'),
@@ -107,7 +107,7 @@ describe('oak-skills validate', () => {
         'validate',
         join(repo.root, 'skills/central/oak-bad/SKILL.md'),
         'skills/central/oak-example',
-        'README.md',
+        'docs/SKILLS_INDEX.md',
       ],
       captured.output,
       { cwd: repo.root },
@@ -118,7 +118,7 @@ describe('oak-skills validate', () => {
     );
     expect(captured.err()).not.toContain('oak-other/SKILL.md');
     expect(captured.err()).toContain("skills/profiles.json: doesn't list oak-other in any profile");
-    expect(captured.err()).toContain('README.md: has an out-of-date skills table.');
+    expect(captured.err()).toContain('docs/SKILLS_INDEX.md: has an out-of-date skills table.');
   });
 
   it('passes when the given paths hold no problems', async () => {

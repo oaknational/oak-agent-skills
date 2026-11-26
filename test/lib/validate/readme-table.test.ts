@@ -54,11 +54,11 @@ describe('renderSkillsTable', () => {
       [
         '| Skill | Profile or bundle | What it does |',
         '| --- | --- | --- |',
-        '| [`oak-a11y`](skills/central/oak-a11y/SKILL.md) | `frontend` | Accessibility. |',
-        '| [`oak-orphan`](skills/central/oak-orphan/SKILL.md) |  | In no profile. |',
-        '| [`oak-review`](skills/central/oak-review/SKILL.md) | `base`, `frontend` | Reviews \\| checks things. |',
-        '| [`oc-tokens`](skills/repos/oc/oc-tokens/SKILL.md) | The `oc` bundle | Tokens. |',
-        '| [`owa-routing`](skills/repos/owa/owa-routing/SKILL.md) | The `owa` bundle | Routes. |',
+        '| [`oak-a11y`](../skills/central/oak-a11y/SKILL.md) | `frontend` | Accessibility. |',
+        '| [`oak-orphan`](../skills/central/oak-orphan/SKILL.md) |  | In no profile. |',
+        '| [`oak-review`](../skills/central/oak-review/SKILL.md) | `base`, `frontend` | Reviews \\| checks things. |',
+        '| [`oc-tokens`](../skills/repos/oc/oc-tokens/SKILL.md) | The `oc` bundle | Tokens. |',
+        '| [`owa-routing`](../skills/repos/owa/owa-routing/SKILL.md) | The `owa` bundle | Routes. |',
       ].join('\n'),
     );
   });
@@ -66,7 +66,7 @@ describe('renderSkillsTable', () => {
   it('says when there are no skills, and copes with no profiles.json', () => {
     expect(renderSkillsTable([], undefined)).toBe('No skills have been published yet.');
     expect(renderSkillsTable([skill('oak-a', 'A.')], undefined)).toContain(
-      '| [`oak-a`](skills/central/oak-a/SKILL.md) |  | A. |',
+      '| [`oak-a`](../skills/central/oak-a/SKILL.md) |  | A. |',
     );
   });
 });
@@ -100,34 +100,37 @@ describe('checkReadmeTable', () => {
 
   it('passes an up-to-date table', () => {
     writeTree(root, {
-      'README.md': `# Title\n\n${TABLE_START}\n${renderSkillsTable(skills, profiles)}\n${TABLE_END}\n`,
+      'docs/SKILLS_INDEX.md': `# Title\n\n${TABLE_START}\n${renderSkillsTable(skills, profiles)}\n${TABLE_END}\n`,
     });
     expect(checkReadmeTable(root, skills, profiles)).toEqual([]);
   });
 
   it('fails when a skill was added without regenerating the table', () => {
     writeTree(root, {
-      'README.md': `# Title\n\n${TABLE_START}\n${renderSkillsTable(skills, profiles)}\n${TABLE_END}\n`,
+      'docs/SKILLS_INDEX.md': `# Title\n\n${TABLE_START}\n${renderSkillsTable(skills, profiles)}\n${TABLE_END}\n`,
     });
     expect(checkReadmeTable(root, [...skills, skill('oak-new', 'New.')], profiles)).toEqual([
-      { file: 'README.md', message: 'has an out-of-date skills table. Run pnpm readme:skills.' },
+      {
+        file: 'docs/SKILLS_INDEX.md',
+        message: 'has an out-of-date skills table. Run pnpm readme:skills.',
+      },
     ]);
   });
 
   it('fails without the markers', () => {
-    writeTree(root, { 'README.md': '# Title\n' });
+    writeTree(root, { 'docs/SKILLS_INDEX.md': '# Title\n' });
     expect(checkReadmeTable(root, skills, profiles)[0]?.message).toMatch(/^has no skills table/);
   });
 
-  it('fails without a README', () => {
+  it('fails without the skills index', () => {
     expect(checkReadmeTable(root, skills, profiles)).toEqual([
-      { file: 'README.md', message: 'is missing' },
+      { file: 'docs/SKILLS_INDEX.md', message: 'is missing' },
     ]);
   });
 
   it('round-trips: replacing the table makes the check pass', () => {
-    writeTree(root, { 'README.md': `# Title\n\n${TABLE_START}\nstale\n${TABLE_END}\n` });
-    const file = join(root, 'README.md');
+    writeTree(root, { 'docs/SKILLS_INDEX.md': `# Title\n\n${TABLE_START}\nstale\n${TABLE_END}\n` });
+    const file = join(root, 'docs/SKILLS_INDEX.md');
     writeFileSync(
       file,
       replaceSkillsTable(readFileSync(file, 'utf8'), renderSkillsTable(skills, profiles)) ?? '',

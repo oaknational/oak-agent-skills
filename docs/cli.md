@@ -74,7 +74,7 @@ When a file already exists, `init` leaves it alone and prints what to add to it 
 - The organisation Dependabot secrets `OAK_SKILLS_APP_CLIENT_ID` and `OAK_SKILLS_APP_KEY` are available to the repository.
 - `package.json` has a `packageManager` field naming pnpm, which the workflows use to install the right version.
 - `package.json` has an `engines.node` field, which the workflows read to set up Node.
-- `oak-skills check` is a required status check, so an edited or out-of-date skill can't merge.
+- `oak-skills check` is a required status check, so an edited or out-of-date skill can't merge. Making it one needs a repository admin, or a custom role that can edit repository rules.
 
 Then review and commit what `init` wrote, including `.agents/skills/` and `.claude/skills/`, and fill in `AGENTS.md` with your team.
 
@@ -279,6 +279,8 @@ The workflow publishes with [npm trusted publishing](https://docs.npmjs.com/trus
 ```sh
 npm view @oaknational/oak-agent-skills@<version> dist.attestations
 ```
+
+To compare a tarball you packed locally with the published one, compare the unpacked files, not the `integrity` hash. A gzip header records the operating system that made it, so a pack made on macOS never matches the workflow's Linux pack byte for byte, even when every file is the same.
 
 ### When a bad version is published
 
