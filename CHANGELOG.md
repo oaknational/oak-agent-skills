@@ -1,5 +1,11 @@
 # @oaknational/oak-agent-skills
 
+## 0.3.1
+
+### Patch Changes
+
+- 0c2ae0c: `oak-skills validate`, which only runs in the central repository, now checks the skills table in `docs/SKILLS_INDEX.md` instead of `README.md`.
+
 ## 0.3.0
 
 ### Minor Changes
