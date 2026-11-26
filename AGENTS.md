@@ -23,7 +23,7 @@ While the first iteration is being built, agents follow `docs/plans/agent-build-
 - The publish workflow's package gate: `pnpm publish:gate` builds, packs with pnpm and checks the tarball (`scripts/check-package.ts`). It also fails if the old placeholder team `todo-engineers-team` appears anywhere.
 - Workflow files, including those in `templates/workflows/`: `pnpm workflows` (needs actionlint and zizmor installed). For a stricter pass, run `zizmor --offline --persona=auditor .github`.
 - Skills: `pnpm validate` checks every skill against our rules. Given paths, it reports only the skills that hold them, as the pre-commit hook does.
-- README skills table: `pnpm readme:skills` regenerates it from the skills and `skills/profiles.json`. `validate` fails if it's out of date.
+- Skills index: `pnpm readme:skills` regenerates the skills table in `docs/SKILLS_INDEX.md` from the skills and `skills/profiles.json`. `validate` fails if it's out of date.
 - Git hooks (installed by `pnpm install`): pre-commit runs Prettier, ESLint, markdownlint, cspell and `validate` on staged files, then gitleaks; commit-msg runs commitlint.
 - Pending release notes: `pnpm changeset` adds one; `pnpm changeset:status` checks them. Changes to `skills/`, `templates/` or `src/` need a changeset.
 - Run the built tool: `pnpm exec oak-skills --help`

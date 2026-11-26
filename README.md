@@ -1,11 +1,14 @@
 # Oak agent skills
 
 [![Checks on main: whether CI is passing](https://img.shields.io/github/actions/workflow/status/oaknational/oak-agent-skills/ci.yml?branch=main&label=checks&color=0550ae)](https://github.com/oaknational/oak-agent-skills/actions/workflows/ci.yml)
-[![Status: experimental, internal to Oak](https://img.shields.io/badge/status-experimental-9a6700)](#status)
+![Status: experimental, internal to Oak](https://img.shields.io/badge/status-experimental-9a6700)
 [![Code style: formatted with Prettier](https://img.shields.io/badge/code_style-Prettier-6639ba)](https://prettier.io/)
 [![Licence: MIT](https://img.shields.io/badge/licence-MIT-0550ae)](LICENSE)
 
 Oak National Academy's shared agent skills, and the `oak-skills` tool that syncs them into a repository.
+
+> [!IMPORTANT]
+> The package is being piloted in a few Oak repositories, so expect changes before 1.0.0. It's an experimental internal Oak tool, and we don't support its use outside Oak.
 
 An agent skill is a folder of instructions that a coding agent, such as Claude Code, Codex, Cursor or GitHub Copilot, loads when a task needs it: reviewing a pull request, say, or checking an interface for accessibility. This repository is the one place Oak's skills are written and reviewed, and every Oak repository receives the same versions through the npm package `@oaknational/oak-agent-skills`.
 
@@ -13,10 +16,6 @@ An agent skill is a folder of instructions that a coding agent, such as Claude C
 - A repository chooses its profiles in its `package.json`. `oak-skills sync` copies the skills into `.agents/skills/` and links them into `.claude/skills/` for Claude Code, and `oak-skills check` fails CI if a synced skill is edited or out of date.
 - Each release reaches a repository as a Dependabot pull request, and a workflow syncs the skills into it.
 - An engineer who improves a skill sends the change back here with `oak-skills promote`, which opens a pull request.
-
-## Status
-
-The package is being piloted in a few Oak repositories, so expect changes before 1.0.0. It's an experimental internal Oak tool, and we don't support its use outside Oak.
 
 ## Quick start
 
@@ -42,24 +41,12 @@ In a repository you want to receive the skills, which needs Node 24.22.1 or a la
 
 `init` writes the settings, workflows and starter files the repository needs, runs the first sync and lists what it can't do for you. Add `--profile frontend` for a repository with an interface. Review and commit what it wrote. The workflows install the Node version in `package.json`'s `engines.node`, so set it if it's missing. [Subscribing a repository](docs/cli.md#subscribing-a-repository) covers bundles, pnpm workspaces and the GitHub set-up.
 
-## Skills
-
-<!-- prettier-ignore-start -->
-<!-- skills-table:start -->
-| Skill | Profile or bundle | What it does |
-| --- | --- | --- |
-| [`oak-accessibility-review`](skills/central/oak-accessibility-review/SKILL.md) | `frontend` | Builds and reviews interface code to meet WCAG 2.2 AA, with Oak's 7:1 contrast target, including the criteria automated checkers miss. Use when building or reviewing components, pages, forms, quizzes or embedded media, or when asked whether something is accessible, to audit accessibility, or to check keyboard support, focus, contrast, alt text, labels, captions or target size. |
-| [`oak-pr-create`](skills/central/oak-pr-create/SKILL.md) | `base` | Writes a pull request title and description that explain what a change does and why, with steps to test it, then opens or updates the pull request once the user approves them. Use when opening, creating or updating a pull request, or when asked to write or improve a PR title, description or testing instructions. |
-| [`oak-security-review`](skills/central/oak-security-review/SKILL.md) | `base` | Threat-models a code change for security, covering authorisation, input handling, secrets and dependencies, and keeping personal data and secrets out of code, logs and errors. Use when a change adds or alters sign-in, permissions or other access checks, handles input from outside the system, stores, logs or exposes personal data or secrets, adds a dependency or changes a CI workflow, or when asked for a security review. Not for performance work or general code review. |
-| [`oak-sos-draft`](skills/central/oak-sos-draft/SKILL.md) | `base` | Drafts a squad's Scrum of Scrums update from its Linear activity, checked against the previous meeting's notes, covering accomplishments, upcoming goals, cross-team dependencies and risks. Use when asked to write, prepare or draft a Scrum of Scrums report, update or notes. |
-| [`oak-tdd`](skills/central/oak-tdd/SKILL.md) | `base` | Builds a change test first, writing a failing test for each small piece of behaviour, making it pass with the simplest code, then tidying up, and adds tests to existing code before changing it. Use when asked to use TDD or write tests first, to add or improve tests, or to fix a bug with a test that proves the fix. |
-| [`oak-ticket-start`](skills/central/oak-ticket-start/SKILL.md) | `base` | Starts work on a Linear ticket by listing the tickets ready to start, summarising the chosen one with its acceptance criteria, creating a local branch from the latest default branch, moving the ticket to In Progress, then offering to plan the work. Use when asked to start, pick up or begin a Linear ticket, or to create a branch for one. |
-<!-- skills-table:end -->
-<!-- prettier-ignore-end -->
-
 ## Documentation
 
-The [guides](docs/README.md) cover using `oak-skills`, contributing a skill, and troubleshooting.
+- [Skills index](docs/SKILLS_INDEX.md): every skill in the package, the profile or bundle that includes it, and what it does.
+- [Using oak-skills](docs/cli.md): subscribing a repository, choosing and syncing skills, checking them in CI, editing and promoting a skill, removing a skill, and releasing.
+- [Contributing a skill](docs/contributing-a-skill.md): where a skill belongs, how to write and name it, profiles, vendoring and deprecating skills, changesets, and review.
+- [Troubleshooting oak-skills](docs/troubleshooting.md): what each exit code means and how to fix it, and other problems with syncing, Dependabot updates, promoting and skill links.
 
 ## Contributing
 

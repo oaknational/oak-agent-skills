@@ -4,7 +4,7 @@ description: Writes or changes an agent skill in the oak-agent-skills repository
 license: MIT
 metadata:
   owner: '@oaknational/skills-maintainers'
-  updated: '2026-10-13'
+  updated: '2026-11-26'
 ---
 
 # Skill authoring
@@ -67,7 +67,7 @@ The description decides when agents load the skill, so it matters more than any 
 
 1. Add a shared skill to at least one profile in `skills/profiles.json`. Put it in `base` only if it applies to every repository.
 2. For a new repository code, add a line for `/skills/repos/<code>/` to `.github/CODEOWNERS`, naming its team and `@oaknational/skills-maintainers`.
-3. Run `pnpm readme:skills` to regenerate the skills table in `README.md`.
+3. Run `pnpm readme:skills` to regenerate the skills table in `docs/SKILLS_INDEX.md`.
 4. Add a changeset with `pnpm changeset`. Use patch for wording that doesn't change when a skill fires, minor for a new skill or a change to when it fires, and record breaking changes as minor until version 1.0.0.
 
 ## 7. Check it

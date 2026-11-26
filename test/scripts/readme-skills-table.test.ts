@@ -25,10 +25,10 @@ describe('scripts/readme-skills-table.ts', () => {
         }),
       });
       const result = spawnSync(process.execPath, [script], { cwd: repo.root, encoding: 'utf8' });
-      expect(result.stdout).toBe('Updated the skills table in README.md.\n');
+      expect(result.stdout).toBe('Updated the skills table in docs/SKILLS_INDEX.md.\n');
       expect(result.status).toBe(0);
-      expect(readFileSync(join(repo.root, 'README.md'), 'utf8')).toContain(
-        '| [`oak-new`](skills/central/oak-new/SKILL.md) | `base` | A new skill. |',
+      expect(readFileSync(join(repo.root, 'docs/SKILLS_INDEX.md'), 'utf8')).toContain(
+        '| [`oak-new`](../skills/central/oak-new/SKILL.md) | `base` | A new skill. |',
       );
     } finally {
       repo.cleanup();
@@ -38,10 +38,10 @@ describe('scripts/readme-skills-table.ts', () => {
   it('fails without the markers', () => {
     const repo = createTempRepo('central-repo');
     try {
-      writeTree(repo.root, { 'README.md': '# No table\n' });
+      writeTree(repo.root, { 'docs/SKILLS_INDEX.md': '# No table\n' });
       const result = spawnSync(process.execPath, [script], { cwd: repo.root, encoding: 'utf8' });
       expect(result.status).toBe(1);
-      expect(result.stderr).toContain('README.md needs the');
+      expect(result.stderr).toContain('docs/SKILLS_INDEX.md needs the');
     } finally {
       repo.cleanup();
     }
