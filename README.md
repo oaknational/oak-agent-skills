@@ -16,7 +16,7 @@ An agent skill is a folder of instructions that a coding agent, such as Claude C
 
 ## Status
 
-0.1.0 is the first release. It's being piloted in a few Oak repositories, so expect changes before 1.0.0. It's an experimental internal Oak tool, and we don't support its use outside Oak.
+The package is being piloted in a few Oak repositories, so expect changes before 1.0.0. It's an experimental internal Oak tool, and we don't support its use outside Oak.
 
 ## Quick start
 
